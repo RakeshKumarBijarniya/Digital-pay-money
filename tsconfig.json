@@ -3,15 +3,19 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "src/constants/ImagePath.jsx",
+    "src/component/atoms/CustomHeader.jsx",
+    "src/app/services/LoginServices.jsx",
+    "src/app/(auth)/Login.jsx",
+    "src/app/(main)/Profile.jsx",
+    "src/app/(main)/UpdateProfile.jsx"
   ]
 }
