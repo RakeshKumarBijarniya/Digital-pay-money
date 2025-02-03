@@ -1,8 +1,7 @@
-import { View, Text } from "react-native";
 import React from "react";
 import { Tabs } from "expo-router";
 import { moderateScale } from "react-native-size-matters";
-
+import CustomTabBar from "@/src/component/atoms/CustomTabBar";
 const TabRoot = () => {
   return (
     <Tabs
@@ -13,8 +12,17 @@ const TabRoot = () => {
           height: moderateScale(42),
         },
       }}
+      tabBar={(props) => <CustomTabBar {...props} />}
     >
-      <Tabs.Screen name="index" options={{ title: "Home" }} />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "My Home", // Title for the screen header
+          tabBarLabel: "Home", // Label for the tab bar
+        }}
+      />
+
+      <Tabs.Screen name="History" />
     </Tabs>
   );
 };

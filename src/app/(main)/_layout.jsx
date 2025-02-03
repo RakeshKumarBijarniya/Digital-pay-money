@@ -19,6 +19,7 @@ const MainStack = () => {
       <Drawer.Screen name="Profile" options={{ headerShown: false }} />
       <Drawer.Screen name="UpdateProfile" options={{ headerShown: false }} />
       <Drawer.Screen name="Electricity" options={{ headerShown: false }} />
+      <Drawer.Screen name="DthRecharge" options={{ headerShown: false }} />
       <Drawer.Screen name="(tabs)" />
     </Drawer>
   );

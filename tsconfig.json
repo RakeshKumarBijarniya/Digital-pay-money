@@ -16,6 +16,8 @@
     "src/app/services/LoginServices.jsx",
     "src/app/(auth)/Login.jsx",
     "src/app/(main)/Profile.jsx",
-    "src/app/(main)/UpdateProfile.jsx"
+    "src/app/(main)/UpdateProfile.jsx",
+    "src/app/services/ApiServices.jsx",
+    "src/app/(main)/(tabs)/_layout.jsx"
   ]
 }

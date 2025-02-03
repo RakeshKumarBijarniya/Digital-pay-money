@@ -13,6 +13,7 @@ const RecentsPay = () => {
       </Text>
       <FlatList
         data={names}
+        keyExtractor={(item, index) => index.toString()}
         horizontal={true}
         renderItem={({ item }) => (
           <View

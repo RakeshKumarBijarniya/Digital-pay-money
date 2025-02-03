@@ -5,6 +5,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Image,
+  BackHandler,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { moderateScale } from "react-native-size-matters";
@@ -20,6 +21,22 @@ const Profile = () => {
       setUserData(JSON.parse(data));
     };
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    const backAction = () => {
+      // Navigate to Home when back button is pressed
+      router.back();
+      return true; // Prevent default back action
+    };
+
+    // Add event listener for hardware back button
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove(); // Cleanup on unmount
   }, []);
 
   return (

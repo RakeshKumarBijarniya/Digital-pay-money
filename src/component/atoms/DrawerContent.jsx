@@ -4,7 +4,7 @@ import { DrawerContentScrollView } from "@react-navigation/drawer";
 import { moderateScale } from "react-native-size-matters";
 import { Redirect, router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-const DrawerContent = ({ props }) => {
+const DrawerContent = ({ ...props }) => {
   const [showWalletService, setShowWalletService] = useState(false);
   const [showMobileItem, setShowMobileItem] = useState(false);
   const [showPayBillItem, setShowBillItem] = useState(false);
@@ -56,7 +56,7 @@ const DrawerContent = ({ props }) => {
               resizeMode="contain"
               style={{ width: moderateScale(18), height: moderateScale(18) }}
             />
-            <Text>Wallet Services</Text>
+            <Text style={{ fontSize: 16 }}>Wallet Services</Text>
           </View>
           <Image
             source={require("@/src/assets/images/drawer_down_select_icon.png")}
@@ -86,9 +86,7 @@ const DrawerContent = ({ props }) => {
               <Text>Wallet To Wallet Transfer</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          ""
-        )}
+        ) : null}
         <TouchableOpacity
           style={{
             flexDirection: "row",
@@ -97,18 +95,20 @@ const DrawerContent = ({ props }) => {
           }}
           onPress={() => setShowMobileItem(!showMobileItem)}
         >
-          <View style={{ flexDirection: "row", gap: moderateScale(20) }}>
+          <TouchableOpacity
+            style={{ flexDirection: "row", gap: moderateScale(20) }}
+          >
             <Image
-              source={require("@/src/assets/images/mobile_icon.png")}
+              source={require("@/src/assets/images/drawer_history.png")}
               resizeMode="contain"
               style={{
-                width: moderateScale(22),
-                height: moderateScale(22),
+                width: moderateScale(25),
+                height: moderateScale(25),
                 left: -5,
               }}
             />
             <Text>Transaction History</Text>
-          </View>
+          </TouchableOpacity>
           <Image
             source={require("@/src/assets/images/drawer_down_select_icon.png")}
           />
@@ -137,9 +137,7 @@ const DrawerContent = ({ props }) => {
               <Text>DTH Recharge</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          ""
-        )}
+        ) : null}
         <TouchableOpacity
           style={{
             flexDirection: "row",
@@ -167,6 +165,7 @@ const DrawerContent = ({ props }) => {
           <View style={{ gap: 20 }}>
             <TouchableOpacity
               style={{ left: 20, flexDirection: "row", gap: moderateScale(20) }}
+              onPress={() => router.push("/(main)/Electricity")}
             >
               <Image
                 source={require("@/src/assets/images/electricity.png")}
@@ -216,9 +215,7 @@ const DrawerContent = ({ props }) => {
               <Text>Gas Bill</Text>
             </TouchableOpacity>
           </View>
-        ) : (
-          ""
-        )}
+        ) : null}
         <TouchableOpacity onPress={handleLogout}>
           <Text>Logout</Text>
         </TouchableOpacity>

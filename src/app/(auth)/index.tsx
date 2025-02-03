@@ -11,7 +11,6 @@ const Auth = () => {
       <TouchableOpacity onPress={() => router.push("/(main)/(tabs)")}>
         <Text>Go to Home</Text>
       </TouchableOpacity>
-
       {isLoading && <ActivityIndicator size={30} color={"green"} />}
     </View>
   );

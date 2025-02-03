@@ -7,7 +7,11 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Platform,
 } from "react-native";
+import { Dimensions } from "react-native";
+
+const { width } = Dimensions.get("window");
 import { jwtDecode } from "jwt-decode";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -20,7 +24,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [emailORphone, setEmailORPhone] = useState("");
   const [error, setError] = useState("");
-
+  const storage = Platform.OS === "web" ? global.localStorage : AsyncStorage;
   const handleSignIn = async () => {
     try {
       if (!emailORphone.trim()) {
@@ -33,9 +37,10 @@ const Login = () => {
         const response = await loginServiceApi(formData);
         if (response.status === 200) {
           const token = response.data.data.token;
+          await storage.setItem("token", token);
           const decoded = await jwtDecode(token);
-          console.log(decoded);
-          await AsyncStorage.setItem("myData", JSON.stringify(decoded));
+
+          await storage.setItem("myData", JSON.stringify(decoded));
           router.push("/(main)/(tabs)");
         }
       }
@@ -45,164 +50,181 @@ const Login = () => {
   };
 
   return (
-    <ScrollView>
-      <SafeAreaView style={style.mainContainer}>
-        <View style={style.iconContainer}>
-          <Image
-            style={style.logoStyle}
-            source={require("@/src/assets/images/logo digitalplay.png")}
-          />
-        </View>
-        <View style={style.LoginMidContainer}>
-          <Image
-            source={require("@/src/assets/images/userIcon.png")}
-            style={{ resizeMode: "contain", width: moderateScale(100) }}
-          />
-          <View style={{ paddingVertical: 5, alignItems: "center" }}>
-            <Text
-              style={{
-                color: "#000",
-                fontSize: 17,
-                fontWeight: "800",
-                textAlign: "center",
-                fontFamily: "SansitaSwashed",
-              }}
-            >
-              Login/Signup Account
-            </Text>
-            <TextInput
-              placeholder="Enter Your Number"
-              style={style.TextInputStyle}
-              value={emailORphone}
-              onChangeText={(text) => setEmailORPhone(text)}
-            />
-            <TextInput
-              placeholder="Enter Your Password"
-              style={style.TextInputStyle}
-              value={password}
-              onChangeText={(text) => setPassword(text)}
-              secureTextEntry={true}
-            />
-            {error ? (
-              <Text style={{ color: "red", fontSize: 17, top: 2 }}>
-                {error}
-              </Text>
-            ) : (
-              <Text style={{ height: moderateScale(12) }}></Text>
-            )}
-            <TouchableOpacity
-              style={{
-                backgroundColor: "#2E5077",
-                marginTop: moderateScale(10),
-                borderRadius: moderateScale(10),
-              }}
-              onPress={handleSignIn}
-            >
-              <Text style={style.loginButton}>Login</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity>
-              <Text style={{ fontSize: 18 }}>
-                Don't have account?
-                <Text
-                  style={{ fontSize: 15, color: "#1A11C3CC", opacity: 0.9 }}
-                >
-                  Signup here
-                </Text>
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View style={style.supportContainer}>
-          <Text
-            style={{
-              color: "#F6F4F094",
-              fontWeight: "600",
-              fontSize: 17,
-              marginLeft: moderateScale(20),
-            }}
-          >
-            Support
-          </Text>
-          <View
-            style={{
-              paddingHorizontal: 30,
-              flexDirection: "row",
-              paddingVertical: 10,
-            }}
-          >
-            <Text>
-              <Image
-                source={require("@/src/assets/images/chat_logo.png")}
-                style={{ width: moderateScale(15), height: moderateScale(15) }}
-                resizeMode="contain"
-              />
-            </Text>
-
-            <Text
-              style={{
-                fontSize: 17,
-                fontWeight: "500",
-                color: "#F6F4F096",
-                marginLeft: 20,
-              }}
-            >
-              Help
-            </Text>
-          </View>
-          <View
-            style={{
-              paddingHorizontal: 30,
-              flexDirection: "row",
-            }}
-          >
+    <ScrollView style={{ flex: 1, backgroundColor: "#4B83C3" }}>
+      <SafeAreaView>
+        <View style={style.mainContainer}>
+          <View style={style.iconContainer}>
             <Image
-              source={require("@/src/assets/images/radio_button.png")}
-              style={{ width: moderateScale(16), height: moderateScale(17) }}
-              resizeMode="contain"
+              style={style.logoStyle}
+              source={require("@/src/assets/images/digitalplay.png")}
             />
-            <Text
+          </View>
+          <View style={style.LoginMidContainer}>
+            <Image
+              source={require("@/src/assets/images/userIcon.png")}
               style={{
-                fontSize: 17,
-                fontWeight: "500",
-                color: "#F6F4F096",
-                marginLeft: 20,
+                resizeMode: "contain",
+                width: moderateScale(100),
+                height: moderateScale(75),
+                top: moderateScale(5),
+              }}
+            />
+            <View
+              style={{
+                paddingVertical: moderateScale(5),
+                alignItems: "center",
               }}
             >
-              Privacy Policy
-            </Text>
-          </View>
-        </View>
-        <View style={style.bottomContainer}>
-          <Text
-            style={{
-              color: "#F6F4F04F",
-              fontSize: 34,
-              fontWeight: "800",
-              marginLeft: 20,
-            }}
-          >
-            Digital Pay
-          </Text>
-          <View>
-            <View style={{ flexDirection: "row" }}>
               <Text
                 style={{
-                  color: "#F6F4F04F",
-                  fontSize: 34,
+                  color: "#000",
+                  fontSize: 20,
                   fontWeight: "800",
-                  marginLeft: 20,
+                  textAlign: "center",
+                  lineHeight: 24,
+                  top: moderateScale(7),
+                  fontFamily: "SansitaSwashed",
                 }}
               >
-                True App
+                Login/Signup Account
               </Text>
-              <Text style={{ padding: 5 }}>
+              <TextInput
+                placeholder="Enter Your Number"
+                style={style.TextInputStyle}
+                value={emailORphone}
+                onChangeText={(text) => setEmailORPhone(text)}
+              />
+              <TextInput
+                placeholder="Enter Your Password"
+                style={style.TextInputStyle}
+                value={password}
+                onChangeText={(text) => setPassword(text)}
+                secureTextEntry={true}
+              />
+              {error ? (
+                <Text style={{ color: "red", fontSize: 17, top: 2 }}>
+                  {error}
+                </Text>
+              ) : (
+                <Text style={{ height: moderateScale(12) }}></Text>
+              )}
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#2E5077",
+                  marginTop: moderateScale(10),
+                  borderRadius: moderateScale(10),
+                }}
+                onPress={handleSignIn}
+              >
+                <Text style={style.loginButton}>Login</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity>
+                <Text style={{ fontSize: 18 }}>
+                  Don't have account?
+                  <Text
+                    style={{ fontSize: 15, color: "#1A11C3CC", opacity: 0.9 }}
+                  >
+                    Signup here
+                  </Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View style={style.supportContainer}>
+            <Text
+              style={{
+                color: "#F6F4F094",
+                fontWeight: "600",
+                fontSize: 17,
+                marginLeft: moderateScale(20),
+              }}
+            >
+              Support
+            </Text>
+            <View
+              style={{
+                paddingHorizontal: 30,
+                flexDirection: "row",
+                paddingVertical: 10,
+              }}
+            >
+              <Text>
                 <Image
-                  source={require("@/src/assets/images/love_logo.png")}
-                  style={{ width: 40, height: 40 }}
+                  source={require("@/src/assets/images/chat_logo.png")}
+                  style={{
+                    width: moderateScale(15),
+                    height: moderateScale(15),
+                  }}
                   resizeMode="contain"
                 />
               </Text>
+
+              <Text
+                style={{
+                  fontSize: 17,
+                  fontWeight: "500",
+                  color: "#F6F4F096",
+                  marginLeft: 20,
+                }}
+              >
+                Help
+              </Text>
+            </View>
+            <View
+              style={{
+                paddingHorizontal: 30,
+                flexDirection: "row",
+              }}
+            >
+              <Image
+                source={require("@/src/assets/images/radio_button.png")}
+                style={{ width: moderateScale(16), height: moderateScale(17) }}
+                resizeMode="contain"
+              />
+              <Text
+                style={{
+                  fontSize: 17,
+                  fontWeight: "500",
+                  color: "#F6F4F096",
+                  marginLeft: 20,
+                }}
+              >
+                Privacy Policy
+              </Text>
+            </View>
+          </View>
+          <View style={style.bottomContainer}>
+            <Text
+              style={{
+                color: "#F6F4F04F",
+                fontSize: 34,
+                fontWeight: "800",
+                marginLeft: 20,
+              }}
+            >
+              Digital Pay
+            </Text>
+            <View>
+              <View style={{ flexDirection: "row" }}>
+                <Text
+                  style={{
+                    color: "#F6F4F04F",
+                    fontSize: 34,
+                    fontWeight: "800",
+                    marginLeft: 20,
+                  }}
+                >
+                  True App
+                </Text>
+                <Text style={{ padding: 5 }}>
+                  <Image
+                    source={require("@/src/assets/images/love_logo.png")}
+                    style={{ width: 40, height: 40 }}
+                    resizeMode="contain"
+                  />
+                </Text>
+              </View>
             </View>
           </View>
         </View>
@@ -215,12 +237,12 @@ const style = StyleSheet.create({
   mainContainer: {
     backgroundColor: "#4B83C3",
     height: "100%",
-    flex: 1,
+    paddingBottom: moderateScale(10),
   },
   iconContainer: { justifyContent: "center", alignItems: "center", flex: 1 },
   logoStyle: {
-    width: moderateScale(110),
-    height: scale(110),
+    width: moderateScale(75),
+    height: moderateScale(80),
     resizeMode: "contain",
   },
   LoginMidContainer: {
@@ -228,8 +250,10 @@ const style = StyleSheet.create({
     marginHorizontal: moderateScale(25),
     borderRadius: 10,
     flex: 3,
+    width: width * 0.95,
+    alignSelf: "center",
     top: moderateScale(6),
-    paddingBottom: moderateScale(12),
+    paddingBottom: moderateScale(20),
     alignItems: "center",
   },
   supportContainer: {
@@ -240,11 +264,12 @@ const style = StyleSheet.create({
   bottomContainer: { left: 10, flex: 1 },
   TextInputStyle: {
     backgroundColor: "#1374E321",
-    width: moderateScale(200),
-    height: moderateScale(30),
+    width: width * 0.9,
+    height: moderateScale(35),
     paddingHorizontal: 10,
     fontSize: 17,
     textAlign: "center",
+    alignItems: "center",
     borderRadius: 10,
     marginTop: 10,
     color: "#0000008F",
@@ -252,7 +277,7 @@ const style = StyleSheet.create({
   loginButton: {
     color: "#fff",
     paddingVertical: moderateScale(5),
-    width: moderateScale(200),
+    width: width * 0.9,
     fontSize: moderateScale(17),
     fontWeight: "700",
     textAlign: "center",
