@@ -86,16 +86,19 @@ const DthRecharge = () => {
 
   const showAlert = () => {
     if (Platform.OS === "web") {
-      alert("All fields are required!");
+      setErrorModal(true);
+      setErrorMessage("All Field Are Required!!!");
+      return;
     } else {
-      Alert.alert("All fields are required!", [
-        { text: "OK", onPress: () => console.log("OK Pressed") },
-      ]);
+      setErrorModal(true);
+      setErrorMessage("All Field Are Required!!!");
+      return;
     }
   };
   const submitDthData = async () => {
-    if (!subscriberId || !operator || !amount) {
+    if (!subscriberId || !selectedOperatorId || !amount) {
       showAlert();
+      return;
     }
     try {
       const data = {
@@ -113,7 +116,6 @@ const DthRecharge = () => {
         setSuccessMessage(response.data.message);
       }
     } catch (e) {
-      console.log(e.response?.data?.error);
       setErrorModal(true);
       setErrorMessage(e.response?.data?.message);
     }
@@ -278,7 +280,7 @@ const DthRecharge = () => {
           </View>
         </Modal>
         <Modal
-          animationType="slide"
+          animationType=""
           transparent={true}
           visible={errorModal}
           onRequestClose={toggleErrorModal}

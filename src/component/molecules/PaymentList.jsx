@@ -29,16 +29,15 @@ const PaymentList = () => {
             onPress={() => router.push("/(main)/Electricity")}
           >
             <Image
-              source={require("@/src/assets/images/electricityIcon.png")}
+              source={require("@/src/assets/images/MobileCredit.png")}
               resizeMode="contain"
-              style={{ width: moderateScale(25), height: moderateScale(25) }}
+              style={{ width: moderateScale(30), height: 30 }}
             />
             <Text style={{ fontFamily: "SansitaSwashed", fontSize: 13 }}>
-              Electricity
+              Mobile
             </Text>
           </TouchableOpacity>
         </View>
-
         <View
           style={{ alignItems: "center", width: "25%", marginTop: 20, gap: 10 }}
         >
@@ -63,12 +62,12 @@ const PaymentList = () => {
             onPress={() => router.push("/(main)/Electricity")}
           >
             <Image
-              source={require("@/src/assets/images/voucher.png")}
+              source={require("@/src/assets/images/electricityIcon.png")}
               resizeMode="contain"
-              style={{ width: moderateScale(30), height: 30 }}
+              style={{ width: moderateScale(25), height: moderateScale(25) }}
             />
             <Text style={{ fontFamily: "SansitaSwashed", fontSize: 13 }}>
-              Voucher
+              Electricity
             </Text>
           </TouchableOpacity>
         </View>
@@ -83,53 +82,56 @@ const PaymentList = () => {
               style={{ width: moderateScale(30), height: 30 }}
             />
             <Text style={{ fontFamily: "SansitaSwashed", fontSize: 13 }}>
-              Assurance
+              LIC
             </Text>
           </TouchableOpacity>
         </View>
+
+        <View style={{ alignItems: "center", width: "25%", marginTop: 20 }}>
+          <TouchableOpacity
+            style={{ alignItems: "center", gap: 10 }}
+            onPress={() => router.push("/(main)/WaterPay")}
+          >
+            <Image
+              source={require("@/src/assets/images/water_icon.png")}
+              resizeMode="contain"
+              style={{ width: moderateScale(30), height: 30 }}
+            />
+            <Text style={{ fontFamily: "SansitaSwashed", fontSize: 13 }}>
+              Water
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={{ alignItems: "center", width: "25%", marginTop: 20 }}>
           <TouchableOpacity
             style={{ alignItems: "center", gap: 10 }}
             onPress={() => router.push("/(main)/Electricity")}
           >
             <Image
-              source={require("@/src/assets/images/shoppingCartIcon.png")}
+              source={require("@/src/assets/images/lpg_truck.png")}
               resizeMode="contain"
               style={{ width: moderateScale(30), height: 30 }}
             />
 
             <Text style={{ fontFamily: "SansitaSwashed", fontSize: 13 }}>
-              Merchant
+              LPG
             </Text>
           </TouchableOpacity>
         </View>
+
         <View style={{ alignItems: "center", width: "25%", marginTop: 20 }}>
           <TouchableOpacity
             style={{ alignItems: "center", gap: 10 }}
             onPress={() => router.push("/(main)/Electricity")}
           >
             <Image
-              source={require("@/src/assets/images/MobileCredit.png")}
+              source={require("@/src/assets/images/gas_cylinder.png")}
               resizeMode="contain"
               style={{ width: moderateScale(30), height: 30 }}
             />
             <Text style={{ fontFamily: "SansitaSwashed", fontSize: 13 }}>
-              Mobile Credit
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <View style={{ alignItems: "center", width: "25%", marginTop: 20 }}>
-          <TouchableOpacity
-            style={{ alignItems: "center", gap: 10 }}
-            onPress={() => router.push("/(main)/Electricity")}
-          >
-            <Image
-              source={require("@/src/assets/images/billIcon (2).png")}
-              resizeMode="contain"
-              style={{ width: moderateScale(30), height: 30 }}
-            />
-            <Text style={{ fontFamily: "SansitaSwashed", fontSize: 13 }}>
-              Bill
+              GAS
             </Text>
           </TouchableOpacity>
         </View>

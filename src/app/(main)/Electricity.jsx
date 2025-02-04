@@ -217,9 +217,10 @@ const Electricity = () => {
           <View>
             <Text style={styles.title}>Consumer number</Text>
             <TextInput
-              style={[styles.textInputStyle, { color: "#000" }]}
+              style={[styles.textInputStyle, { color: "#000", fontSize: 20 }]}
               value={consumerNumber}
               onChangeText={(text) => setConsumerNumber(text)}
+              placeholder="Enter Consumer number"
             />
           </View>
         </View>

@@ -18,6 +18,7 @@
     "src/app/(main)/Profile.jsx",
     "src/app/(main)/UpdateProfile.jsx",
     "src/app/services/ApiServices.jsx",
-    "src/app/(main)/(tabs)/_layout.jsx"
+    "src/app/(main)/(tabs)/_layout.jsx",
+    "src/app/(main)/WaterPay.jsx"
   ]
 }

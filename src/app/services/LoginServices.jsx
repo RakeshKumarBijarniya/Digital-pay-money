@@ -11,6 +11,10 @@ const electricityApi = async () => {
   const response = await baseRouter.post("/getOperaterbill");
   return response.data;
 };
+const waterBillApi = async () => {
+  const response = await baseRouter.post("/getOperaterbill");
+  return response.data;
+};
 
 const getbillDetails = async (data) => {
   const response = await baseRouter.post("/getbillDetails", data);
@@ -47,4 +51,5 @@ export {
   getBrowserPlan,
   getOperaterOrCricle,
   dthrechargeSumbit,
+  waterBillApi,
 };
