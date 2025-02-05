@@ -1,24 +1,25 @@
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Platform,
   Modal,
+  FlatList,
+  BackHandler,
+  KeyboardAvoidingView,
 } from "react-native";
 import { Dimensions } from "react-native";
 import { moderateScale } from "react-native-size-matters";
-import RNPickerSelect from "react-native-picker-select";
+import DropDownPicker from "react-native-dropdown-picker";
 import {
   fetchDthApi,
   getBrowserPlan,
   getOperaterOrCricle,
   dthrechargeSumbit,
 } from "../services/LoginServices";
+import { router } from "expo-router";
 
 const { width, height } = Dimensions.get("window");
 
@@ -28,6 +29,7 @@ const DthRecharge = () => {
   const [selectedOperatorId, setSelectedOperatorId] = useState("");
   const [amount, setAmount] = useState("");
   const [dthOperators, setDthOperators] = useState([]);
+  const [open, setOpen] = useState(false);
   const [browsePlans, setBrowsePlans] = useState({});
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -41,13 +43,13 @@ const DthRecharge = () => {
         circle: circleName,
         op: operatorName,
       });
-
       setBrowsePlans(response?.data?.info || {});
       setSelectedCategory(null);
     } catch (error) {
       console.error("Error fetching browse plans:", error);
     }
   };
+
   const handleSubscriberIdChange = async (text) => {
     setSubscriberId(text);
     if (text.length === 10) {
@@ -56,9 +58,7 @@ const DthRecharge = () => {
         if (response?.data?.info) {
           const fetchedOperator = response.data.info.operator;
           const fetchedCircle = response.data.info.circle;
-
           setOperator(fetchedOperator || "");
-
           if (fetchedCircle && fetchedOperator) {
             fetchBrowsePlans(fetchedCircle, fetchedOperator);
           }
@@ -68,14 +68,12 @@ const DthRecharge = () => {
       }
     } else {
       setOperator("");
-
       setBrowsePlans({});
     }
   };
 
   const fetchOperator = async () => {
     const response = await fetchDthApi();
-
     if (response?.data?.data) {
       const operators = response.data.data.filter(
         (operator) => operator.category === "DTH"
@@ -85,16 +83,10 @@ const DthRecharge = () => {
   };
 
   const showAlert = () => {
-    if (Platform.OS === "web") {
-      setErrorModal(true);
-      setErrorMessage("All Field Are Required!!!");
-      return;
-    } else {
-      setErrorModal(true);
-      setErrorMessage("All Field Are Required!!!");
-      return;
-    }
+    setErrorModal(true);
+    setErrorMessage("All Fields Are Required!!!");
   };
+
   const submitDthData = async () => {
     if (!subscriberId || !selectedOperatorId || !amount) {
       showAlert();
@@ -123,6 +115,21 @@ const DthRecharge = () => {
 
   useEffect(() => {
     fetchOperator();
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        // Clear the subscriberId when back button is pressed
+        setSubscriberId("");
+        router.back();
+        return true; // Prevent default back action (exit app)
+      }
+    );
+
+    // Return a cleanup function to remove the event listener when the component is unmounted
+    return () => {
+      backHandler.remove();
+    };
   }, []);
 
   const onOperatorSelect = (id) => {
@@ -133,175 +140,130 @@ const DthRecharge = () => {
     }
   };
 
-  const handleCategoryClick = (category) => {
-    setSelectedCategory(category);
-  };
-  const toggleModal = () => {
-    setShowModal(!showModal);
-  };
-  const toggleErrorModal = () => {
-    setErrorModal(!errorModal);
-  };
+  const toggleModal = () => setShowModal(!showModal);
+  const toggleErrorModal = () => setErrorModal(!errorModal);
+
+  const renderPlanButton = (category) => (
+    <TouchableOpacity
+      key={category}
+      onPress={() => setSelectedCategory(category)}
+      style={styles.planButton}
+    >
+      <Text style={styles.planButtonText}>{category}</Text>
+    </TouchableOpacity>
+  );
+
+  const renderPlanDetails = (plan, index) => (
+    <TouchableOpacity
+      key={index}
+      style={styles.planDetails}
+      onPress={() => setAmount(plan.rs)}
+    >
+      <Text style={{ fontSize: 18, fontWeight: "bold" }}>₹ {plan.rs}</Text>
+      <Text style={{ fontSize: 15 }}>
+        {plan.desc || "No description available"}
+      </Text>
+      <Text style={{ fontSize: 18 }}>⏳ Validity: {plan.validity}</Text>
+    </TouchableOpacity>
+  );
 
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.mainContainer}>
-        <Text style={styles.heading}>DTH Recharge</Text>
-        <View>
-          <Text style={{ fontWeight: "500" }}>Subscriber ID:</Text>
-          <TextInput
-            style={styles.inputText}
-            placeholder="Enter Subscriber ID"
-            value={subscriberId}
-            onChangeText={(text) => handleSubscriberIdChange(text)}
-          />
-        </View>
-        <View>
-          <Text style={{ fontWeight: "500" }}>Operator:</Text>
-        </View>
-        <RNPickerSelect
-          onValueChange={onOperatorSelect}
-          items={
-            dthOperators.length > 0
-              ? dthOperators.map((item, index) => ({
-                  label: item.name || "Unknown",
-                  value: item.id || `fallback-${index}`,
-                }))
-              : []
-          }
-          value={selectedOperatorId || ""}
-          style={{
-            inputAndroid: {
-              fontSize: 18,
-              height: 60,
-              width: "100%",
-              borderWidth: 1,
-              borderColor: "#ccc",
-              borderRadius: 8,
-              backgroundColor: "transparent",
-              textAlign: "center",
-            },
-            inputIOS: {
-              fontSize: 18,
-              height: 60,
-              width: "100%",
-              borderWidth: 1,
-              borderColor: "#ccc",
-              borderRadius: 8,
-              backgroundColor: "transparent",
-              textAlign: "center",
-            },
-            inputWeb: {
-              fontSize: 18,
-              height: 60,
-              width: "100%",
-              borderWidth: 1,
-              borderColor: "#ccc",
-              borderRadius: 8,
-              backgroundColor: "transparent",
-              textAlign: "center",
-            },
-            placeholder: {
-              color: "black",
-              fontSize: 18,
-            },
-          }}
-        />
-
-        <View>
-          <Text style={{ fontWeight: "500" }}>Amount:</Text>
-          <TextInput
-            style={styles.inputText}
-            placeholder="Enter Amount"
-            value={amount}
-            onChangeText={(text) => setAmount(text)}
-            keyboardType="numeric"
-          />
-        </View>
-
-        <TouchableOpacity style={styles.rechargeButton} onPress={submitDthData}>
-          <Text style={{ color: "#fff" }}>Recharge</Text>
-        </TouchableOpacity>
-
-        <View
-          style={{
-            flexDirection: "row",
-            gap: 20,
-            flexWrap: "wrap",
-            marginTop: moderateScale(20),
-            justifyContent: "space-around",
-          }}
-        >
-          {Object.keys(browsePlans).map((category, index) => (
-            <TouchableOpacity
-              key={`category-${category}-${index}`}
-              onPress={() => handleCategoryClick(category)}
-            >
-              <Text style={styles.planButtonText}>{category}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        <View style={styles.planContainer}>
-          {browsePlans[selectedCategory]?.map((plan, index) => (
-            <TouchableOpacity
-              key={`plan-${selectedCategory}-${index}`}
-              style={styles.planDetails}
-              onPress={() => setAmount(plan.rs)}
-            >
-              <Text style={{ fontSize: 18, fontWeight: 700 }}>₹ {plan.rs}</Text>
-              <Text style={{ fontSize: 15 }}>
-                {plan.desc || "No description available"}
+    <KeyboardAvoidingView>
+      <View style={styles.container}>
+        <View style={styles.mainContainer}>
+          <FlatList
+            ListHeaderComponent={
+              <>
+                <Text style={styles.heading}>DTH Recharge</Text>
+                <View>
+                  <Text style={{ fontWeight: "500" }}>Subscriber ID:</Text>
+                  <TextInput
+                    style={styles.inputText}
+                    placeholder="Enter Subscriber ID"
+                    value={subscriberId}
+                    onChangeText={handleSubscriberIdChange}
+                  />
+                </View>
+                <View style={{ zIndex: 1000 }}>
+                  <Text style={{ fontWeight: "500" }}>Operator:</Text>
+                  <DropDownPicker
+                    open={open}
+                    value={selectedOperatorId}
+                    items={dthOperators.map((item) => ({
+                      label: item.name || "Unknown",
+                      value: item.id,
+                    }))}
+                    setOpen={setOpen}
+                    setValue={setSelectedOperatorId}
+                    onSelectItem={(item) => onOperatorSelect(item.value)}
+                    containerStyle={{ height: 100, marginBottom: 10 }}
+                    style={{ backgroundColor: "transparent" }}
+                    dropDownStyle={{ backgroundColor: "transparent" }}
+                  />
+                </View>
+                <View>
+                  <Text style={{ fontWeight: "500" }}>Amount:</Text>
+                  <TextInput
+                    style={styles.inputText}
+                    placeholder="Enter Amount"
+                    value={amount}
+                    onChangeText={setAmount}
+                    keyboardType="numeric"
+                  />
+                </View>
+                <TouchableOpacity
+                  style={styles.rechargeButton}
+                  onPress={submitDthData}
+                >
+                  <Text style={{ color: "#fff" }}>Recharge</Text>
+                </TouchableOpacity>
+                <View style={styles.planButtonContainer}>
+                  {Object.keys(browsePlans).map(renderPlanButton)}
+                </View>
+              </>
+            }
+            data={browsePlans[selectedCategory] || []}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item, index }) => renderPlanDetails(item, index)}
+            ListEmptyComponent={
+              <Text style={{ alignSelf: "center", zIndex: 0 }}>
+                No Plans Available
               </Text>
-              <Text style={{ fontSize: 18 }}>⏳ Validity: {plan.validity}</Text>
-            </TouchableOpacity>
-          ))}
+            }
+          />
+
+          <Modal animationType="slide" transparent visible={showModal}>
+            <View style={styles.modalBackground}>
+              <View style={styles.modalContainer}>
+                <Text style={styles.modalTitle}>Recharge Successful</Text>
+                <Text>{successMessage}</Text>
+                <TouchableOpacity
+                  style={styles.proceedButton}
+                  onPress={toggleModal}
+                >
+                  <Text style={{ color: "#fff" }}>Ok</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+          {/* Error Modal */}
+          <Modal animationType="slide" transparent visible={errorModal}>
+            <View style={styles.modalBackground}>
+              <View style={styles.modalContainer}>
+                <Text style={styles.modalTitle}>Failed</Text>
+                <Text>{errorMessage}</Text>
+                <TouchableOpacity
+                  style={[styles.proceedButton, { backgroundColor: "red" }]}
+                  onPress={toggleErrorModal}
+                >
+                  <Text style={{ color: "#fff" }}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </View>
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={showModal}
-          onRequestClose={toggleModal}
-          style={{ backgroundColor: "#fff" }}
-        >
-          <View style={styles.modalBackground}>
-            <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>Recharge Successful</Text>
-              <Text>{successMessage}</Text>
-
-              <TouchableOpacity
-                style={styles.proceedButton}
-                onPress={toggleModal}
-              >
-                <Text style={{ color: "#fff", backgroundColor: '"#6624d1"' }}>
-                  Ok
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-        <Modal
-          animationType=""
-          transparent={true}
-          visible={errorModal}
-          onRequestClose={toggleErrorModal}
-          style={{ backgroundColor: "#fff" }}
-        >
-          <View style={styles.modalBackground}>
-            <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>Faild</Text>
-              <Text>{errorMessage}</Text>
-
-              <TouchableOpacity
-                style={[styles.proceedButton, { backgroundColor: "red" }]}
-                onPress={toggleErrorModal}
-              >
-                <Text style={{ color: "#fff" }}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-      </ScrollView>
-    </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -313,6 +275,7 @@ const styles = StyleSheet.create({
     padding: 20,
     justifyContent: "center",
     backgroundColor: "#4B83C3",
+    paddingVertical: 40,
   },
   mainContainer: {
     backgroundColor: "#F6F4F0",
@@ -321,8 +284,9 @@ const styles = StyleSheet.create({
     boxShadow: "0px 2px 3.5px rgba(0, 0, 0, 0.25)",
     elevation: 5,
     gap: 10,
-    height: height * 1,
+    height: height * 0.9,
     paddingVertical: 20,
+    marginVertical: 20, // Adds space above and below this container
   },
   heading: {
     fontSize: 20,
@@ -332,7 +296,7 @@ const styles = StyleSheet.create({
   inputText: {
     borderRadius: 8,
     borderWidth: 1,
-    height: moderateScale(30),
+    height: moderateScale(45),
     paddingLeft: 10,
     marginBottom: 10,
     fontSize: 20,
@@ -352,11 +316,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
   },
-  planButton: {
-    justifyContent: "center",
+  planDetails: {
     flexDirection: "row",
-    gap: 20,
-    flexWrap: "wrap",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 10,
   },
   planButtonText: {
     backgroundColor: "#a1d186",
@@ -368,6 +334,13 @@ const styles = StyleSheet.create({
     fontWeight: 500,
     alignSelf: "center",
   },
+  planButtonContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 20,
+    marginTop: 10,
+    justifyContent: "center",
+  },
   planContainer: {
     height: 300,
     gap: 20,
@@ -375,7 +348,7 @@ const styles = StyleSheet.create({
   },
   planDetails: {
     gap: 10,
-    flexWrap: "wrap",
+    flexShrink: 0,
     justifyContent: "space-between",
     borderWidth: 1,
     borderRadius: 10,

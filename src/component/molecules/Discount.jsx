@@ -31,16 +31,16 @@ const Discount = () => {
           renderItem={({ item }) => (
             <View
               style={{
-                paddingHorizontal: moderateScale(15),
+                paddingHorizontal: moderateScale(10),
                 top: 10,
-                marginBottom: 10,
+                marginBottom: 0,
               }}
             >
               <Image
                 source={require("@/src/assets/images/Card.png")}
                 style={{
                   width: moderateScale(240),
-                  height: moderateScale(270),
+                  height: moderateScale(200),
                 }}
                 resizeMode="contain"
               />

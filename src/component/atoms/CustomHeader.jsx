@@ -33,13 +33,17 @@ const CustomHeader = ({ navigation }) => {
         </TouchableOpacity>
         <View style={{ flexDirection: "row", alignItems: "center", left: 20 }}>
           <Image
-            source={require("@/src/assets/images/userPhoto.png")}
+            source={{
+              uri: "https://6916-110-235-219-122.ngrok-free.app/api/v1/uploads/1738749442550-mernPic.jpeg",
+            }}
             resizeMode="contain"
             style={{
               width: moderateScale(47),
               height: moderateScale(35),
+              borderRadius: 100,
             }}
           />
+
           {userData ? (
             <Text style={{ fontSize: 17, fontWeight: 600 }}>
               {userData.name}

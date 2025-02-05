@@ -6,11 +6,12 @@ import {
   TextInput,
   TouchableOpacity,
   BackHandler,
+  ActivityIndicator,
   Modal,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import {
-  waterBillApi,
+  gasBillApi,
   getbillDetails,
   handleSubmitBill,
 } from "../services/LoginServices";
@@ -20,10 +21,10 @@ import { moderateScale } from "react-native-size-matters";
 
 const { width, height } = Dimensions.get("window");
 
-const WaterPay = () => {
-  const [waterProviders, setWaterProviders] = useState([]);
+const GasPay = () => {
+  const [gasProviders, setGasProviders] = useState([]);
   const [providerId, setProviderId] = useState(null);
-  const [rrNumber, setRrNumber] = useState("");
+  const [billId, setBillId] = useState("");
   const [billDetails, setBillDetails] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -34,19 +35,24 @@ const WaterPay = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  const currentDate = new Date();
+
+  const date = currentDate.toLocaleDateString();
+
   const fetchBillDetails = async () => {
-    if (!providerId || !rrNumber.trim()) {
-      alert("Please select a provider and enter a valid consumer number");
+    if (!providerId || !billId.trim()) {
+      alert("Please select a provider and enter a valid bill ID.");
       return;
     }
 
     const data = {
       operatorId: providerId,
-      canumber: rrNumber,
+      canumber: billId,
       mode: "online",
       ad1: "pass value according to operator",
     };
-    console.log(data);
+
+    setLoading(true);
     const response = await getbillDetails(data);
     if (response?.data?.status) {
       setBillDetails({
@@ -55,23 +61,24 @@ const WaterPay = () => {
         billAmount: response.data.amount,
       });
       setShowModal(true);
+      setLoading(false);
     } else {
       alert("Fetch Failed");
     }
   };
 
   const handlePayBill = async () => {
-    setLoading(true);
     if (!billDetails) {
       alert("Please fetch the bill details before proceeding to payment.");
       return;
     }
+    setLoading(true);
     setShowModal(false);
     try {
       const data = {
-        BillType: "Water",
+        BillType: "Gas",
         operator: providerId,
-        canumber: rrNumber,
+        canumber: billId,
         amount: billDetails.billAmount,
         referenceid: "20018575947",
         latitude: "27.2232",
@@ -80,7 +87,7 @@ const WaterPay = () => {
         bill_fetch: {
           billAmount: billDetails.billAmount,
           billnetamount: billDetails.billAmount,
-          billdate: "01Jan1990",
+          billdate: date,
           dueDate: billDetails.dueDate,
           cellNumber: "102277100",
           userName: billDetails.consumerName,
@@ -91,29 +98,30 @@ const WaterPay = () => {
       console.log(response);
       if (response?.status === "SUCCESS" && response?.data?.status) {
         setSuccessModalShow(true);
-        setLoading(false);
         setSuccessMessage(response.message);
+        setLoading(false);
       }
     } catch (e) {
       setErrorMessage(e.response.data.message);
       setErrorModal(true);
       console.log(e.response.data.message);
+      setLoading(false);
     }
   };
 
   const fetchOperators = async () => {
     try {
-      const response = await waterBillApi();
+      const response = await gasBillApi();
 
       if (!response) {
         alert("Network Error");
         return;
       }
       const filteredProviders = response.data.data.filter(
-        (provider) => provider.category === "Water"
+        (provider) => provider.category === "Gas"
       );
 
-      setWaterProviders(
+      setGasProviders(
         filteredProviders.map((provider) => ({
           label: provider.name,
           value: provider.id,
@@ -126,14 +134,11 @@ const WaterPay = () => {
 
   useEffect(() => {
     fetchOperators();
-  }, []);
-
-  useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
         // Clear the subscriberId when back button is pressed
-
+        setSubscriberId("");
         router.back();
         return true; // Prevent default back action (exit app)
       }
@@ -143,6 +148,21 @@ const WaterPay = () => {
     return () => {
       backHandler.remove();
     };
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const backAction = () => {
+      router.push("/(main)");
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
   }, []);
 
   const handleCancleButton = () => {
@@ -157,23 +177,27 @@ const WaterPay = () => {
     setShowModal(!showModal);
   };
 
-  return (
+  return loading ? (
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <ActivityIndicator size="large" color="#0000ff" />
+    </View>
+  ) : (
     <View style={styles.container}>
       <View style={styles.mainContainer}>
-        <Text style={[styles.title, styles.textCenter]}>
-          Pay your Water Bill
+        <Text style={[styles.title, { textAlign: "center" }]}>
+          Your Gas Bill
         </Text>
         <View style={styles.midContainer}>
-          <Text style={styles.title}>Water Service Provider</Text>
+          <Text style={styles.title}>Gas Service Provider:</Text>
           <View style={{ gap: moderateScale(30) }}>
             <View style={{ zIndex: open ? 1000 : 1 }}>
               <DropDownPicker
                 open={open}
                 value={providerId}
-                items={waterProviders}
+                items={gasProviders}
                 setOpen={setOpen}
                 setValue={setProviderId}
-                setItems={setWaterProviders}
+                setItems={setGasProviders}
                 placeholder="Select Provider"
                 style={styles.dropdown}
                 dropDownContainerStyle={styles.dropdownContainer}
@@ -188,12 +212,12 @@ const WaterPay = () => {
               />
             </View>
             <View>
-              <Text style={styles.title}>RR number</Text>
+              <Text style={styles.title}>Bill ID:</Text>
               <TextInput
                 style={[styles.textInputStyle, { color: "#000", fontSize: 20 }]}
-                value={rrNumber}
-                onChangeText={(text) => setRrNumber(text)}
-                placeholder="Enter RR Number"
+                value={billId}
+                onChangeText={(text) => setBillId(text)}
+                placeholder="Enter Bill ID"
               />
             </View>
             <View>
@@ -218,7 +242,7 @@ const WaterPay = () => {
           <View style={styles.modalContainer}>
             {billDetails ? (
               <View>
-                <Text style={styles.modalTitle}>Water Bill Detail</Text>
+                <Text style={styles.modalTitle}>Gas Bill Detail</Text>
                 <Text>Consumer Name : {billDetails.consumerName}</Text>
                 <Text>Due Date : {billDetails.dueDate}</Text>
                 <Text>Bill Amount : {billDetails.billAmount}</Text>
@@ -278,7 +302,7 @@ const WaterPay = () => {
               style={styles.proceedButton}
               onPress={() => {
                 setSuccessModalShow(false); // Close modal
-                setRrNumber(""); // Reset consumer number input
+                setBillId(""); // Reset consumer number input
                 setBillDetails(null); // Reset bill details
                 setProviderId("");
                 // Reset provider selection
@@ -388,4 +412,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default WaterPay;
+export default GasPay;

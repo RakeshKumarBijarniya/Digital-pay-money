@@ -16,12 +16,13 @@ const MainStack = () => {
       drawerContent={(props) => <DrawerContent {...props} />}
     >
       <Drawer.Screen name="index" />
+      <Drawer.Screen name="(tabs)" />
       <Drawer.Screen name="Profile" options={{ headerShown: false }} />
       <Drawer.Screen name="UpdateProfile" options={{ headerShown: false }} />
       <Drawer.Screen name="Electricity" options={{ headerShown: false }} />
       <Drawer.Screen name="DthRecharge" options={{ headerShown: false }} />
       <Drawer.Screen name="WaterPay" options={{ headerShown: false }} />
-      <Drawer.Screen name="(tabs)" />
+      <Drawer.Screen name="GasPay" options={{ headerShown: false }} />
     </Drawer>
   );
 };

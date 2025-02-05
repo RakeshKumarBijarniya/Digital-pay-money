@@ -15,6 +15,10 @@ const waterBillApi = async () => {
   const response = await baseRouter.post("/getOperaterbill");
   return response.data;
 };
+const gasBillApi = async () => {
+  const response = await baseRouter.post("/getOperaterbill");
+  return response.data;
+};
 
 const getbillDetails = async (data) => {
   const response = await baseRouter.post("/getbillDetails", data);
@@ -52,4 +56,5 @@ export {
   getOperaterOrCricle,
   dthrechargeSumbit,
   waterBillApi,
+  gasBillApi,
 };

@@ -118,19 +118,20 @@ const Electricity = () => {
   }, []);
 
   useEffect(() => {
-    const backAction = () => {
-      // Navigate to Home when back button is pressed
-      router.push("/(main)");
-      return true; // Prevent default back action
-    };
-
-    // Add event listener for hardware back button
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
-      backAction
+      () => {
+        // Clear the subscriberId when back button is pressed
+        setSubscriberId("");
+        router.back();
+        return true; // Prevent default back action (exit app)
+      }
     );
 
-    return () => backHandler.remove(); // Cleanup on unmount
+    // Return a cleanup function to remove the event listener when the component is unmounted
+    return () => {
+      backHandler.remove();
+    }; // Cleanup on unmount
   }, []);
 
   const toggleModal = () => {
