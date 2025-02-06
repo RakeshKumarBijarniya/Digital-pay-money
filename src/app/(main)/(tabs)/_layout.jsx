@@ -22,7 +22,7 @@ const TabRoot = () => {
         }}
       />
 
-      <Tabs.Screen name="History" />
+      <Tabs.Screen name="History" options={{ headerShown: false }} />
     </Tabs>
   );
 };

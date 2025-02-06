@@ -11,9 +11,9 @@ import {
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import {
-  gasBillApi,
-  getbillDetails,
-  handleSubmitBill,
+  lpgGasProvider,
+  getLpgBillDetails,
+  handleLpgBill,
 } from "../services/LoginServices";
 import { router } from "expo-router";
 import { Dimensions } from "react-native";
@@ -22,9 +22,9 @@ import { moderateScale } from "react-native-size-matters";
 const { width, height } = Dimensions.get("window");
 
 const GasPay = () => {
-  const [lpgProviders, setLpgProviders] = useState([]);
+  const [gasProviders, setGasProviders] = useState([]);
   const [providerId, setProviderId] = useState(null);
-  const [billId, setBillId] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
   const [billDetails, setBillDetails] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -40,20 +40,26 @@ const GasPay = () => {
   const date = currentDate.toLocaleDateString();
 
   const fetchBillDetails = async () => {
-    if (!providerId || !billId.trim()) {
+    if (!providerId || !contactNumber.trim()) {
       alert("Please select a provider and enter a valid bill ID.");
       return;
     }
 
     const data = {
       operatorId: providerId,
-      canumber: billId,
+      canumber: contactNumber,
       mode: "online",
-      ad1: "pass value according to operator",
+      referenceid: "123456",
+      latitude: "28.65521",
+      longitude: "77.14343",
+      ad1: "1",
+      ad2: "8",
+      ad3: "170",
+      ad4: "41013435",
     };
 
     setLoading(true);
-    const response = await getbillDetails(data);
+    const response = await getLpgBillDetails(data);
     if (response?.data?.status) {
       setBillDetails({
         consumerName: response.data.name,
@@ -76,43 +82,34 @@ const GasPay = () => {
     setShowModal(false);
     try {
       const data = {
-        BillType: "Gas",
+        BillType: "LPG Gas",
+        canumber: contactNumber,
         operator: providerId,
-        canumber: billId,
         amount: billDetails.billAmount,
-        referenceid: "20018575947", // Example reference ID, replace as needed
-        latitude: "27.2232",
-        longitude: "78.26535",
-        mode: "online",
-        bill_fetch: {
-          billAmount: billDetails.billAmount,
-          billnetamount: billDetails.billAmount,
-          billdate: "01Jan1990", // example date, replace with actual date
-          dueDate: billDetails.dueDate,
-          cellNumber: "102277100",
-          userName: billDetails.consumerName,
-        },
+        ad1: 22, //Booking Method
+        ad2: 458, //Lpg id
+        ad3: 16336200, //
+        referenceid: "20220114",
       };
 
-      const response = await handleSubmitBill(data);
+      const response = await handleLpgBill(data);
       console.log(response);
-
       if (response?.status === "SUCCESS" && response?.data?.status) {
         setSuccessModalShow(true);
         setSuccessMessage(response.message);
         setLoading(false);
       }
     } catch (e) {
-      //   setErrorMessage(e.response.data.message);
-      //   setErrorModal(true);
-      console.log(e);
+      setErrorMessage(e.response.data.message);
+      setErrorModal(true);
+      console.log(e.response.data.message);
       setLoading(false);
     }
   };
 
   const fetchOperators = async () => {
     try {
-      const response = await gasBillApi();
+      const response = await lpgGasProvider();
 
       if (!response) {
         alert("Network Error");
@@ -122,7 +119,7 @@ const GasPay = () => {
         (provider) => provider.category === "Gas"
       );
 
-      setLpgProviders(
+      setGasProviders(
         filteredProviders.map((provider) => ({
           label: provider.name,
           value: provider.id,
@@ -138,16 +135,18 @@ const GasPay = () => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
+        // Clear the subscriberId when back button is pressed
         setSubscriberId("");
         router.back();
-        return true;
+        return true; // Prevent default back action (exit app)
       }
     );
 
+    // Return a cleanup function to remove the event listener when the component is unmounted
     return () => {
       backHandler.remove();
-      setLoading(false);
     };
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -193,10 +192,10 @@ const GasPay = () => {
               <DropDownPicker
                 open={open}
                 value={providerId}
-                items={lpgProviders}
+                items={gasProviders}
                 setOpen={setOpen}
                 setValue={setProviderId}
-                setItems={setLpgProviders}
+                setItems={setGasProviders}
                 placeholder="Select Provider"
                 style={styles.dropdown}
                 dropDownContainerStyle={styles.dropdownContainer}
@@ -214,8 +213,8 @@ const GasPay = () => {
               <Text style={styles.title}>Bill ID:</Text>
               <TextInput
                 style={[styles.textInputStyle, { color: "#000", fontSize: 20 }]}
-                value={billId}
-                onChangeText={(text) => setBillId(text)}
+                value={contactNumber}
+                onChangeText={(text) => setContactNumber(text)}
                 placeholder="Enter Bill ID"
               />
             </View>
@@ -301,7 +300,7 @@ const GasPay = () => {
               style={styles.proceedButton}
               onPress={() => {
                 setSuccessModalShow(false); // Close modal
-                setBillId(""); // Reset consumer number input
+                setContactNumber(""); // Reset consumer number input
                 setBillDetails(null); // Reset bill details
                 setProviderId("");
                 // Reset provider selection

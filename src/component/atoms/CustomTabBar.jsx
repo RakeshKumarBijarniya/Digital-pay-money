@@ -3,12 +3,13 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { moderateScale } from "react-native-size-matters";
 
 const CustomTabBar = ({ state, descriptors, navigation }) => {
+  console.log(state);
   return (
     <View style={styles.container}>
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const label =
-          options.tabBarLabel !== undefined ? options.tabBarLabel : route.name; // Fallback to route name if tabBarLabel is not set
+          options.tabBarLabel !== undefined ? options.tabBarLabel : route.name;
 
         const isFocused = state.index === index;
 

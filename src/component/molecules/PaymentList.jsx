@@ -106,7 +106,7 @@ const PaymentList = () => {
         <View style={{ alignItems: "center", width: "25%", marginTop: 20 }}>
           <TouchableOpacity
             style={{ alignItems: "center", gap: 10 }}
-            onPress={() => router.push("/(main)/Electricity")}
+            onPress={() => router.push("/(main)/LpgGasPay")}
           >
             <Image
               source={require("@/src/assets/images/lpg_truck.png")}

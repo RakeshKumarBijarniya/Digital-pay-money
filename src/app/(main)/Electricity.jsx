@@ -121,27 +121,24 @@ const Electricity = () => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
-        // Clear the subscriberId when back button is pressed
-        setSubscriberId("");
         router.back();
-        return true; // Prevent default back action (exit app)
+        return true;
       }
     );
 
-    // Return a cleanup function to remove the event listener when the component is unmounted
     return () => {
       backHandler.remove();
-    }; // Cleanup on unmount
+    };
   }, []);
 
   const toggleModal = () => {
     setShowModal(!showModal);
   };
-  // Format the providers into the correct structure for RNPickerSelect
+
   const formattedProviders = electricityProviders.map((provider, ind) => ({
-    label: provider.name, // Displayed name in the dropdown
+    label: provider.name,
     value: provider.id,
-    index: ind, // Unique value
+    index: ind,
   }));
 
   return (
@@ -168,7 +165,7 @@ const Electricity = () => {
                   }
                 }}
                 items={formattedProviders}
-                value={providerId || ""} // Ensure value is not null
+                value={providerId || ""}
                 placeholder={{
                   label: providerName || "Select Provider",
                   value: "",
@@ -237,7 +234,6 @@ const Electricity = () => {
         transparent={true}
         visible={showModal}
         onRequestClose={toggleModal}
-        // Close the modal on back press
         style={{ backgroundColor: "#fff" }}
       >
         <View style={styles.modalBackground}>
@@ -246,20 +242,16 @@ const Electricity = () => {
             <Text>Consumer Name : Dummy Name</Text>
             <Text>Consumer Name : 31-01-25</Text>
             <Text>Bill Amount : 3000 INR</Text>
-            {/* Your modal content goes here */}
 
             <TouchableOpacity
               style={styles.proceedButton}
-              onPress={handlePayBill} // Close modal
+              onPress={handlePayBill}
             >
               <Text style={{ color: "#fff" }}>
                 {loading ? "Processing..." : "Proceed to Pay"}
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={toggleModal} // Close modal
-            >
+            <TouchableOpacity style={styles.closeButton} onPress={toggleModal}>
               <Text style={{ color: "#fff" }}>Cancel Payment</Text>
             </TouchableOpacity>
           </View>

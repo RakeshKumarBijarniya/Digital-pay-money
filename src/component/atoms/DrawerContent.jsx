@@ -175,6 +175,7 @@ const DrawerContent = ({ ...props }) => {
               <Text>Electricty Bill</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              onPress={() => router.push("/(main)/WaterPay")}
               style={{ left: 20, flexDirection: "row", gap: moderateScale(20) }}
             >
               <Image
@@ -206,6 +207,7 @@ const DrawerContent = ({ ...props }) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={{ left: 20, flexDirection: "row", gap: moderateScale(20) }}
+              onPress={() => router.push("/(main)/GasPay")}
             >
               <Image
                 source={require("@/src/assets/images/drawer_bill_icon.png")}

@@ -15,7 +15,7 @@ let getAuthToken = async () => {
 
 getAuthToken();
 
-export const baseUrl = "https://6916-110-235-219-122.ngrok-free.app/api/v1";
+export const baseUrl = "https://fd1b-110-235-219-46.ngrok-free.app/api/v1";
 // Create an instance of axios with default configuration
 const baseRouter = axios.create({
   baseURL: baseUrl,
@@ -49,7 +49,7 @@ baseRouter.interceptors.response.use(
   },
   (error) => {
     // Handle response errors globally
-    console.error("Response Error:", error);
+    //console.error("Response Error:", error);
     return Promise.reject(error);
   }
 );

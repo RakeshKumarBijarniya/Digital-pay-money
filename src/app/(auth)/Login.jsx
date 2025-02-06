@@ -15,7 +15,7 @@ const { width } = Dimensions.get("window");
 import { jwtDecode } from "jwt-decode";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { scale, verticalScale, moderateScale } from "react-native-size-matters";
+import { moderateScale } from "react-native-size-matters";
 import React, { useState } from "react";
 import { loginServiceApi } from "@/src/app/services/LoginServices";
 import { router } from "expo-router";
@@ -25,27 +25,32 @@ const Login = () => {
   const [emailORphone, setEmailORPhone] = useState("");
   const [error, setError] = useState("");
   const storage = Platform.OS === "web" ? global.localStorage : AsyncStorage;
+
   const handleSignIn = async () => {
+    setError("");
     try {
       if (!emailORphone.trim()) {
-        setError("*Please Insert Your Phone Number");
-      } else if (!password.trim()) {
-        setError("*Please Insert Your Password");
+        return setError("*Please Insert Your Phone Number");
       }
-      if (emailORphone && password) {
-        const formData = { emailORphone, password };
-        const response = await loginServiceApi(formData);
-        if (response.status === 200) {
-          const token = response.data.data.token;
-          await storage.setItem("token", token);
-          const decoded = await jwtDecode(token);
+      if (!password.trim()) {
+        return setError("*Please Insert Your Password");
+      }
+      const formData = { emailORphone, password };
+      const response = await loginServiceApi(formData);
+      console.log(response.status);
+      if (response.status === 200) {
+        const token = response.data.data.token;
 
-          await storage.setItem("myData", JSON.stringify(decoded));
-          router.push("/(main)/(tabs)");
-        }
+        await storage.setItem("token", token);
+        const decoded = jwtDecode(token);
+        console.log(decoded);
+        await storage.setItem("myData", JSON.stringify(decoded));
+        router.push("/(main)/(tabs)");
+      } else {
+        setError("*Invalid login credentials");
       }
     } catch (e) {
-      console.log(e);
+      setError("Phone Number or Password is Wrong");
     }
   };
 
@@ -121,7 +126,7 @@ const Login = () => {
 
               <TouchableOpacity>
                 <Text style={{ fontSize: 18 }}>
-                  Don't have account?
+                  Don't have an account?{" "}
                   <Text
                     style={{ fontSize: 15, color: "#1A11C3CC", opacity: 0.9 }}
                   >
@@ -149,17 +154,14 @@ const Login = () => {
                 paddingVertical: 10,
               }}
             >
-              <Text>
-                <Image
-                  source={require("@/src/assets/images/chat_logo.png")}
-                  style={{
-                    width: moderateScale(15),
-                    height: moderateScale(15),
-                  }}
-                  resizeMode="contain"
-                />
-              </Text>
-
+              <Image
+                source={require("@/src/assets/images/chat_logo.png")}
+                style={{
+                  width: moderateScale(15),
+                  height: moderateScale(15),
+                }}
+                resizeMode="contain"
+              />
               <Text
                 style={{
                   fontSize: 17,
@@ -217,13 +219,11 @@ const Login = () => {
                 >
                   True App
                 </Text>
-                <Text style={{ padding: 5 }}>
-                  <Image
-                    source={require("@/src/assets/images/love_logo.png")}
-                    style={{ width: 40, height: 40 }}
-                    resizeMode="contain"
-                  />
-                </Text>
+                <Image
+                  source={require("@/src/assets/images/love_logo.png")}
+                  style={{ width: 40, height: 40 }}
+                  resizeMode="contain"
+                />
               </View>
             </View>
           </View>
@@ -265,11 +265,10 @@ const style = StyleSheet.create({
   TextInputStyle: {
     backgroundColor: "#1374E321",
     width: width * 0.9,
-    height: moderateScale(35),
+    height: moderateScale(50),
     paddingHorizontal: 10,
     fontSize: 17,
     textAlign: "center",
-    alignItems: "center",
     borderRadius: 10,
     marginTop: 10,
     color: "#0000008F",
