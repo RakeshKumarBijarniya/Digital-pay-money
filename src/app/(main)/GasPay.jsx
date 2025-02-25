@@ -35,10 +35,6 @@ const GasPay = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const currentDate = new Date();
-
-  const date = currentDate.toLocaleDateString();
-
   const fetchBillDetails = async () => {
     if (!providerId || !billId.trim()) {
       alert("Please select a provider and enter a valid bill ID.");

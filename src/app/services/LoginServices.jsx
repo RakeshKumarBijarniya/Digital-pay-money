@@ -18,6 +18,19 @@ const gasBillApi = async () => {
   const response = await baseRouter.post("/getOperaterbill");
   return response.data;
 };
+const licBillOperator = async () => {
+  const response = await baseRouter.post("/getOperaterbill");
+  return response.data;
+};
+const fetchLicBillDetails = async (data) => {
+  const response = await baseRouter.post("/getLicbillDetails", data);
+  return response.data;
+};
+
+const handleSubmitLicBill = async (data) => {
+  const response = await baseRouter.post("/payLicBill", data);
+  return response.data;
+};
 
 const lpgGasProvider = async () => {
   const response = await baseRouter.post("/getLpgOperaterbill");
@@ -43,6 +56,7 @@ const getLpgBillDetails = async (data) => {
   const response = await baseRouter.post("/getLpgBillDetails", data);
   return response.data;
 };
+
 const handleLpgBill = async (data) => {
   const response = await baseRouter.post("/payLPGBill", data);
   return response.data;
@@ -60,6 +74,16 @@ const dthrechargeSumbit = async (data) => {
   const response = await baseRouter.post("/dth-rechargeSumbit", data);
   return response.data;
 };
+
+const moblieOperator = async () => {
+  const response = await baseRouter.post("/getOperater");
+  return response.data;
+};
+const mobileRechargeSubmit = async (data) => {
+  const response = await baseRouter.post("/mobile-rechargeSumbit", data);
+  return response.data;
+};
+
 export {
   loginServiceApi,
   electricityApi,
@@ -74,4 +98,9 @@ export {
   lpgGasProvider,
   getLpgBillDetails,
   handleLpgBill,
+  licBillOperator,
+  fetchLicBillDetails,
+  handleSubmitLicBill,
+  moblieOperator,
+  mobileRechargeSubmit,
 };

@@ -1,12 +1,6 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Platform,
-  ActivityIndicator,
-} from "react-native";
+import { Platform } from "react-native";
 import React, { useEffect, useState } from "react";
-import { Link, Redirect, router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SplashScreen from "expo-splash-screen";
 
@@ -16,42 +10,47 @@ SplashScreen.preventAutoHideAsync();
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [authUser, setAuthUser] = useState(false);
+
   const storage = Platform.OS === "web" ? global.localStorage : AsyncStorage;
 
   const checkLoginData = async () => {
     try {
-      const checkAuth = await storage.getItem("myData");
+      let checkAuth;
+      if (Platform.OS === "web") {
+        checkAuth = storage.getItem("myData"); // localStorage is synchronous
+      } else {
+        checkAuth = await storage.getItem("myData");
+      }
+
       if (checkAuth) {
         setAuthUser(true);
-        router.push("/(main)/(tabs)");
-      } else {
-        router.push("/(auth)/Login");
       }
     } catch (error) {
       console.error("Error checking auth:", error);
     } finally {
       setIsLoading(false);
-      await SplashScreen.hideAsync(); // Hide splash screen
     }
   };
 
   useEffect(() => {
-    checkLoginData();
+    const init = async () => {
+      await checkLoginData();
+      await new Promise((resolve) => setTimeout(resolve, 3000)); // Ensure smooth transition
+      await SplashScreen.hideAsync(); // Hide splash after check is done
+    };
+
+    init();
   }, []);
 
   if (isLoading) {
-    return null; // Splash screen will be shown until authentication is checked
+    return null; // Prevent UI from rendering until the check is complete
   }
 
   if (authUser) {
     return <Redirect href="/(main)/(tabs)" />;
+  } else {
+    return <Redirect href="/(auth)/Login" />;
   }
-
-  return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <ActivityIndicator size="large" color="#0000ff" />
-    </View>
-  );
 };
 
 export default Auth;

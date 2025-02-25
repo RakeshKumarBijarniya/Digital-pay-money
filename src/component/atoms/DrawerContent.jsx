@@ -107,7 +107,7 @@ const DrawerContent = ({ ...props }) => {
                 left: -5,
               }}
             />
-            <Text>Transaction History</Text>
+            <Text>Recharge</Text>
           </TouchableOpacity>
           <Image
             source={require("@/src/assets/images/drawer_down_select_icon.png")}
@@ -193,10 +193,11 @@ const DrawerContent = ({ ...props }) => {
                 resizeMode="contain"
                 style={{ width: moderateScale(18), height: moderateScale(18) }}
               />
-              <Text>LTC Bill</Text>
+              <Text>LIC Bill</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={{ left: 20, flexDirection: "row", gap: moderateScale(20) }}
+              onPress={() => router.push("/(main)/LpgGasPay")}
             >
               <Image
                 source={require("@/src/assets/images/drawer_bill_icon.png")}

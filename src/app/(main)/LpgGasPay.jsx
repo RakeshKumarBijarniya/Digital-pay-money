@@ -129,24 +129,19 @@ const GasPay = () => {
       console.error("Error fetching operators:", error);
     }
   };
-
   useEffect(() => {
     fetchOperators();
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
-        // Clear the subscriberId when back button is pressed
         setSubscriberId("");
         router.back();
-        return true; // Prevent default back action (exit app)
+        return true;
       }
     );
-
-    // Return a cleanup function to remove the event listener when the component is unmounted
     return () => {
       backHandler.remove();
     };
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -340,7 +335,6 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     marginBottom: 15,
-
     backgroundColor: "#4B83C3", // Blue for dropdown button
     borderColor: "#4B83C3",
     borderRadius: 8,

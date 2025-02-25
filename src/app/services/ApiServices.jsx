@@ -15,7 +15,7 @@ let getAuthToken = async () => {
 
 getAuthToken();
 
-export const baseUrl = "https://fd1b-110-235-219-46.ngrok-free.app/api/v1";
+export const baseUrl = "https://817d-110-235-219-45.ngrok-free.app/api/v1";
 // Create an instance of axios with default configuration
 const baseRouter = axios.create({
   baseURL: baseUrl,

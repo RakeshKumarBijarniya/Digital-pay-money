@@ -24,6 +24,9 @@ const MainStack = () => {
       <Drawer.Screen name="WaterPay" options={{ headerShown: false }} />
       <Drawer.Screen name="GasPay" options={{ headerShown: false }} />
       <Drawer.Screen name="LpgGasPay" options={{ headerShown: false }} />
+      <Drawer.Screen name="LicBillPayment" options={{ headerShown: false }} />
+      <Drawer.Screen name="MobileRecharge" options={{ headerShown: false }} />
+      <Drawer.Screen name="Scanner" options={{ headerShown: false }} />
     </Drawer>
   );
 };

@@ -119,14 +119,12 @@ const DthRecharge = () => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
-        // Clear the subscriberId when back button is pressed
         setSubscriberId("");
         router.back();
-        return true; // Prevent default back action (exit app)
+        return true;
       }
     );
 
-    // Return a cleanup function to remove the event listener when the component is unmounted
     return () => {
       backHandler.remove();
     };
@@ -147,7 +145,6 @@ const DthRecharge = () => {
     <TouchableOpacity
       key={category}
       onPress={() => setSelectedCategory(category)}
-      style={styles.planButton}
     >
       <Text style={styles.planButtonText}>{category}</Text>
     </TouchableOpacity>
@@ -323,6 +320,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     marginBottom: 10,
+    gap: 10,
+    flexShrink: 0,
   },
   planButtonText: {
     backgroundColor: "#a1d186",
@@ -346,14 +345,7 @@ const styles = StyleSheet.create({
     gap: 20,
     marginTop: 10,
   },
-  planDetails: {
-    gap: 10,
-    flexShrink: 0,
-    justifyContent: "space-between",
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 10,
-  },
+
   modalBackground: {
     flex: 1,
     justifyContent: "center",
