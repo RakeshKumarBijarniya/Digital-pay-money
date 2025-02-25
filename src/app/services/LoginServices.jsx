@@ -84,6 +84,11 @@ const mobileRechargeSubmit = async (data) => {
   return response.data;
 };
 
+const transferWalletMoney = async (data) => {
+  const response = await baseRouter.post("/transferWalletMoney", data);
+  return response;
+};
+
 export {
   loginServiceApi,
   electricityApi,
@@ -103,4 +108,5 @@ export {
   handleSubmitLicBill,
   moblieOperator,
   mobileRechargeSubmit,
+  transferWalletMoney,
 };

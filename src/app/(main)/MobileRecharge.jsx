@@ -163,15 +163,15 @@ const MobileRecharge = () => {
   }, []);
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
+    <LinearGradient
+      colors={["#00C853", "#1E88E5"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
     >
-      <LinearGradient
-        colors={["#00C853", "#1E88E5"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ flex: 1 }}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
       >
         <ScrollView keyboardShouldPersistTaps="handled">
           <View style={styles.mainContainer}>
@@ -338,20 +338,19 @@ const MobileRecharge = () => {
             </Modal>
           </View>
         </ScrollView>
-      </LinearGradient>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 };
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#4B83C3",
   },
   mainContainer: {
     flex: 1,
     padding: 20,
-
+    backgroundColor: "#fff",
     borderRadius: 10,
     elevation: 5,
     gap: 10,

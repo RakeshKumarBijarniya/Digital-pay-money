@@ -7,8 +7,11 @@ import {
   TouchableOpacity,
   BackHandler,
   Modal,
+  ActivityIndicator,
 } from "react-native";
-import RNPickerSelect from "react-native-picker-select";
+
+import DropDownPicker from "react-native-dropdown-picker";
+import { moderateScale } from "react-native-size-matters";
 import {
   electricityApi,
   getbillDetails,
@@ -21,14 +24,19 @@ const { width, height } = Dimensions.get("window");
 
 const Electricity = () => {
   const [electricityProviders, setElectricityProviders] = useState([]);
-  const [providerName, setProviderName] = useState("");
+
   const [consumerNumber, setConsumerNumber] = useState("");
   const [providerId, setProviderId] = useState("");
   const [billDetails, setBillDetails] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const [successModalShow, setsuccessModalShow] = useState(false);
+
+  const [open, setOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [errorModal, setErrorModal] = useState(false);
 
   const fetchBillDetails = async () => {
     if (!providerId || !consumerNumber.trim()) {
@@ -103,11 +111,12 @@ const Electricity = () => {
         (provider) => provider.category === "Electricity"
       );
 
-      setElectricityProviders(filteredProviders);
-
-      if (filteredProviders.length > 0) {
-        setProviderName("Select Provider");
-      }
+      setElectricityProviders(
+        filteredProviders.map((provider) => ({
+          label: provider.name,
+          value: provider.id,
+        }))
+      );
     } catch (error) {
       console.error("Error fetching operators:", error);
     }
@@ -135,100 +144,67 @@ const Electricity = () => {
     setShowModal(!showModal);
   };
 
-  const formattedProviders = electricityProviders.map((provider, ind) => ({
-    label: provider.name,
-    value: provider.id,
-    index: ind,
-  }));
+  // const formattedProviders = electricityProviders.map((provider, ind) => ({
+  //   label: provider.name,
+  //   value: provider.id,
+  //   index: ind,
+  // }));
 
-  return (
+  return loading ? (
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <ActivityIndicator size="large" color="#0000ff" />
+    </View>
+  ) : (
     <View style={styles.container}>
       <View style={styles.mainContainer}>
-        <Text style={[styles.title, styles.textCenter]}>
-          Pay your electricity Bill
+        <Text style={[styles.title, { textAlign: "center" }]}>
+          Pay Your Electricity Bill
         </Text>
         <View style={styles.midContainer}>
-          <Text style={styles.title}>Electricity Service Provider</Text>
-          {electricityProviders.length > 0 ? (
-            <View style={styles.pickerContainer}>
-              <RNPickerSelect
-                onValueChange={(value) => {
-                  const selectedProvider = electricityProviders.find(
-                    (provider) => provider.id === value
-                  );
-                  if (selectedProvider) {
-                    setProviderName(selectedProvider.name);
-                    setProviderId(selectedProvider.id);
-                  } else {
-                    setProviderName("");
-                    setProviderId("");
-                  }
+          <Text style={styles.title}>Electricity Service Provider:</Text>
+          <View style={{ gap: moderateScale(30) }}>
+            <View style={{ zIndex: open ? 1000 : 1 }}>
+              <DropDownPicker
+                open={open}
+                value={providerId}
+                items={electricityProviders}
+                setOpen={setOpen}
+                setValue={setProviderId}
+                setItems={setElectricityProviders}
+                placeholder="Select Provider"
+                style={styles.dropdown}
+                dropDownContainerStyle={styles.dropdownContainer}
+                textStyle={{
+                  fontSize: 18,
+                  color: "#000",
                 }}
-                items={formattedProviders}
-                value={providerId || ""}
-                placeholder={{
-                  label: providerName || "Select Provider",
-                  value: "",
-                }}
-                style={{
-                  inputAndroid: {
-                    fontSize: 18,
-                    height: 60,
-                    width: "100%",
-                    borderWidth: 1,
-                    borderColor: "#ccc",
-                    borderRadius: 8,
-                    backgroundColor: "transparent",
-                    textAlign: "center",
-                  },
-                  inputIOS: {
-                    fontSize: 18,
-                    height: 60,
-                    width: "100%",
-                    borderWidth: 1,
-                    borderColor: "#ccc",
-                    borderRadius: 8,
-                    backgroundColor: "transparent",
-                    textAlign: "center",
-                  },
-                  inputWeb: {
-                    fontSize: 18,
-                    height: 60,
-                    width: "100%",
-                    borderWidth: 1,
-                    borderColor: "#ccc",
-                    borderRadius: 8,
-                    backgroundColor: "transparent",
-                    textAlign: "center",
-                  },
-                  placeholder: {
-                    color: "black",
-                    fontSize: 18,
-                  },
+                placeholderStyle={{
+                  fontSize: 18,
+                  color: "#000",
                 }}
               />
             </View>
-          ) : (
-            <Text>Network issue</Text>
-          )}
-
-          <View>
-            <Text style={styles.title}>Consumer number</Text>
-            <TextInput
-              style={[styles.textInputStyle, { color: "#000", fontSize: 20 }]}
-              value={consumerNumber}
-              onChangeText={(text) => setConsumerNumber(text)}
-              placeholder="Enter Consumer number"
-            />
+            <View>
+              <Text style={styles.title}>Consumer Number:</Text>
+              <TextInput
+                style={[styles.textInputStyle, { color: "#000", fontSize: 20 }]}
+                value={consumerNumber}
+                onChangeText={setConsumerNumber}
+                placeholder="Enter Consumer Number"
+              />
+            </View>
+            <View>
+              <TouchableOpacity
+                style={styles.buttonContainer}
+                onPress={fetchBillDetails}
+              >
+                <Text style={{ color: "#fff" }}>Fetch bill</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-        <TouchableOpacity
-          style={styles.buttonContainer}
-          onPress={fetchBillDetails}
-        >
-          <Text style={{ color: "#fff" }}>Fetch bill</Text>
-        </TouchableOpacity>
       </View>
+
       <Modal
         animationType="slide"
         transparent={true}
@@ -289,7 +265,6 @@ const Electricity = () => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -301,7 +276,6 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#F6F4F0",
     borderRadius: 10,
-    boxShadow: "0px 2px 3.5px rgba(0, 0, 0, 0.25)",
     elevation: 5,
     gap: 10,
     height: height * 0.9,
@@ -314,55 +288,34 @@ const styles = StyleSheet.create({
   midContainer: {
     marginTop: 10,
   },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: "#ccc",
+  dropdown: {
+    marginBottom: 15,
+
+    backgroundColor: "#4B83C3", // Blue for dropdown button
+    borderColor: "#4B83C3",
     borderRadius: 8,
-    backgroundColor: "transparent",
-    overflow: "hidden",
-    width: "100%",
-    alignSelf: "center",
-  },
-  pickerInput: {
-    fontSize: 18,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    backgroundColor: "transparent",
-    textAlign: "center",
   },
   textInputStyle: {
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
     backgroundColor: "#F6F4F0",
-    overflow: "hidden",
     height: 60,
-    paddingVertical: 5,
-    paddingHorizontal: 5,
+    paddingHorizontal: 10,
   },
-  buttonContainer: {
-    backgroundColor: "#000",
-    fontSize: 20,
-    alignItems: "center",
-    padding: 10,
-    borderRadius: 10,
-  },
-  textCenter: {
-    textAlign: "center",
-  },
+
   modalBackground: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Dark transparent background
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContainer: {
-    backgroundColor: "#FFF", // White background color for the modal
+    backgroundColor: "#FFF",
     padding: 20,
     borderRadius: 10,
-    width: width * 0.8, // Adjust width as needed
-    alignItems: "center", // Center align the content inside the modal
+    width: width * 0.8,
+    alignItems: "center",
   },
   modalTitle: {
     fontSize: 20,
@@ -380,6 +333,30 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     marginTop: 20,
+  },
+
+  dropdownWrapper: {
+    position: "relative",
+    marginBottom: 20,
+    width: "100%",
+    zIndex: 1000, // Higher z-index for the dropdown wrapper
+  },
+  dropdown: {
+    borderColor: "#ccc",
+    borderRadius: 8,
+    backgroundColor: "#4B83C3",
+  },
+  dropdownContainer: {
+    borderColor: "#ccc",
+    backgroundColor: "#fff",
+    backgroundColor: "#4B83C3",
+  },
+  buttonContainer: {
+    backgroundColor: "#000",
+    alignItems: "center",
+    padding: 10,
+    borderRadius: 10,
+    zIndex: 1, // Ensure the button has a lower z-index
   },
 });
 

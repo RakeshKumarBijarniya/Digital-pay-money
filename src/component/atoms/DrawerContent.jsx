@@ -77,6 +77,7 @@ const DrawerContent = ({ ...props }) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={{ left: 20, flexDirection: "row", gap: moderateScale(20) }}
+              onPress={() => router.push("/(main)/WalletToWallet")}
             >
               <Image
                 source={require("@/src/assets/images/drawer_arrow_icon.png")}
@@ -90,25 +91,20 @@ const DrawerContent = ({ ...props }) => {
         <TouchableOpacity
           style={{
             flexDirection: "row",
-            gap: moderateScale(20),
             justifyContent: "space-between",
           }}
-          onPress={() => setShowMobileItem(!showMobileItem)}
+          onPress={() => {
+            setShowMobileItem(!showMobileItem);
+          }}
         >
-          <TouchableOpacity
-            style={{ flexDirection: "row", gap: moderateScale(20) }}
-          >
+          <View style={{ flexDirection: "row", gap: moderateScale(20) }}>
             <Image
-              source={require("@/src/assets/images/drawer_history.png")}
+              source={require("@/src/assets/images/mobile_icon.png")}
               resizeMode="contain"
-              style={{
-                width: moderateScale(25),
-                height: moderateScale(25),
-                left: -5,
-              }}
+              style={{ width: moderateScale(18), height: moderateScale(18) }}
             />
-            <Text>Recharge</Text>
-          </TouchableOpacity>
+            <Text style={{ fontSize: 16 }}>Recharge</Text>
+          </View>
           <Image
             source={require("@/src/assets/images/drawer_down_select_icon.png")}
           />
