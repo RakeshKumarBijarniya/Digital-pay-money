@@ -5,23 +5,25 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Modal,
   FlatList,
-  BackHandler,
+  ActivityIndicator,
   KeyboardAvoidingView,
+  Platform,
+  Modal,
 } from "react-native";
 import { Dimensions } from "react-native";
 import { moderateScale } from "react-native-size-matters";
 import DropDownPicker from "react-native-dropdown-picker";
+import { LinearGradient } from "expo-linear-gradient";
+import NetInfo from "@react-native-community/netinfo";
 import {
   fetchDthApi,
   getBrowserPlan,
   getOperaterOrCricle,
   dthrechargeSumbit,
 } from "../services/LoginServices";
-import { router } from "expo-router";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 const DthRecharge = () => {
   const [subscriberId, setSubscriberId] = useState("");
@@ -34,65 +36,107 @@ const DthRecharge = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+
   const [errorMessage, setErrorMessage] = useState("");
   const [errorModal, setErrorModal] = useState(false);
 
-  const fetchBrowsePlans = async (circleName, operatorName) => {
-    try {
-      const response = await getBrowserPlan({
-        circle: circleName,
-        op: operatorName,
-      });
-      setBrowsePlans(response?.data?.info || {});
-      setSelectedCategory(null);
-    } catch (error) {
-      console.error("Error fetching browse plans:", error);
+  const [loading, setLoading] = useState(true);
+  const [submitLoader, setSubmitLoader] = useState(false);
+  const [showPlan, setShowPlan] = useState([]);
+
+  const checkInternetAndProceed = async (callback) => {
+    const netInfoState = await NetInfo.fetch();
+    if (!netInfoState.isConnected) {
+      Alert.alert(
+        "No Internet",
+        "Please check your internet connection and try again."
+      );
+      return;
     }
+    callback();
+  };
+  const checkPlan = (category) => {
+    const filteredItem = browsePlans[category];
+    setShowPlan(filteredItem);
+  };
+  const fetchBrowsePlans = async (circleName, operatorName) => {
+    checkInternetAndProceed(async () => {
+      try {
+        const response = await getBrowserPlan({
+          circle: circleName,
+          op: operatorName,
+        });
+        console.log(response.data.info);
+        setBrowsePlans(response?.data?.info || {});
+        setSelectedCategory(null);
+      } catch (error) {
+        console.error("Error fetching browse plans:", error);
+      }
+    });
   };
 
   const handleSubscriberIdChange = async (text) => {
     setSubscriberId(text);
     if (text.length === 10) {
-      try {
-        const response = await getOperaterOrCricle({ phoneNumber: text });
-        if (response?.data?.info) {
-          const fetchedOperator = response.data.info.operator;
-          const fetchedCircle = response.data.info.circle;
-          setOperator(fetchedOperator || "");
-          if (fetchedCircle && fetchedOperator) {
-            fetchBrowsePlans(fetchedCircle, fetchedOperator);
+      checkInternetAndProceed(async () => {
+        try {
+          const response = await getOperaterOrCricle({ phoneNumber: text });
+          if (response?.data?.info) {
+            const fetchedOperator = response.data.info.operator;
+            const fetchedCircle = response.data.info.circle;
+            setOperator(fetchedOperator || "");
+            if (fetchedCircle && fetchedOperator) {
+              fetchBrowsePlans(fetchedCircle, fetchedOperator);
+            }
           }
+        } catch (error) {
+          console.error("Error fetching operator or circle details:", error);
         }
-      } catch (error) {
-        console.error("Error fetching operator or circle details:", error);
-      }
+      });
     } else {
       setOperator("");
       setBrowsePlans({});
     }
   };
 
-  const fetchOperator = async () => {
-    const response = await fetchDthApi();
-    if (response?.data?.data) {
-      const operators = response.data.data.filter(
-        (operator) => operator.category === "DTH"
-      );
-      setDthOperators(operators);
-    }
-  };
+  useEffect(() => {
+    fetchOperator();
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      if (!state.isConnected) {
+        alert("No internet connection");
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
-  const showAlert = () => {
-    setErrorModal(true);
-    setErrorMessage("All Fields Are Required!!!");
+  const fetchOperator = async () => {
+    try {
+      const response = await fetchDthApi();
+      if (response?.data?.data) {
+        const operators = response.data.data.filter(
+          (operator) => operator.category === "DTH"
+        );
+        setDthOperators(
+          operators.map((provider) => ({
+            label: provider.name,
+            value: provider.id,
+          }))
+        );
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Error fetching operators:", error);
+    }
   };
 
   const submitDthData = async () => {
     if (!subscriberId || !selectedOperatorId || !amount) {
-      showAlert();
+      setErrorModal(true);
+      setErrorMessage("All fields are required!");
       return;
     }
     try {
+      setSubmitLoader(true);
       const data = {
         selectedOperatorId,
         subscriberId,
@@ -100,167 +144,192 @@ const DthRecharge = () => {
         amount,
         rechargeType: "dth",
       };
-
       const response = await dthrechargeSumbit(data);
-
       if (response.status) {
         setShowModal(true);
         setSuccessMessage(response.data.message);
       }
+      setSubmitLoader(false);
     } catch (e) {
-      setErrorModal(true);
-      setErrorMessage(e.response?.data?.message);
+      alert("Something went wrong.");
+      setSubmitLoader(false);
     }
   };
-
-  useEffect(() => {
-    fetchOperator();
-
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        setSubscriberId("");
-        router.back();
-        return true;
-      }
-    );
-
-    return () => {
-      backHandler.remove();
-    };
-  }, []);
-
-  const onOperatorSelect = (id) => {
-    const selectedOperator = dthOperators.find((item) => item.id === id);
-    if (selectedOperator) {
-      setOperator(selectedOperator.id);
-      setSelectedOperatorId(selectedOperator.id);
-    }
-  };
-
-  const toggleModal = () => setShowModal(!showModal);
-  const toggleErrorModal = () => setErrorModal(!errorModal);
-
-  const renderPlanButton = (category) => (
-    <TouchableOpacity
-      key={category}
-      onPress={() => setSelectedCategory(category)}
-    >
-      <Text style={styles.planButtonText}>{category}</Text>
-    </TouchableOpacity>
-  );
-
-  const renderPlanDetails = (plan, index) => (
-    <TouchableOpacity
-      key={index}
-      style={styles.planDetails}
-      onPress={() => setAmount(plan.rs)}
-    >
-      <Text style={{ fontSize: 18, fontWeight: "bold" }}>₹ {plan.rs}</Text>
-      <Text style={{ fontSize: 15 }}>
-        {plan.desc || "No description available"}
-      </Text>
-      <Text style={{ fontSize: 18 }}>⏳ Validity: {plan.validity}</Text>
-    </TouchableOpacity>
-  );
 
   return (
-    <KeyboardAvoidingView>
-      <View style={styles.container}>
-        <View style={styles.mainContainer}>
-          <FlatList
-            ListHeaderComponent={
-              <>
-                <Text style={styles.heading}>DTH Recharge</Text>
-                <View>
-                  <Text style={{ fontWeight: "500" }}>Subscriber ID:</Text>
-                  <TextInput
-                    style={styles.inputText}
-                    placeholder="Enter Subscriber ID"
-                    value={subscriberId}
-                    onChangeText={handleSubscriberIdChange}
-                  />
-                </View>
-                <View style={{ zIndex: 1000 }}>
-                  <Text style={{ fontWeight: "500" }}>Operator:</Text>
-                  <DropDownPicker
-                    open={open}
-                    value={selectedOperatorId}
-                    items={dthOperators.map((item) => ({
-                      label: item.name || "Unknown",
-                      value: item.id,
-                    }))}
-                    setOpen={setOpen}
-                    setValue={setSelectedOperatorId}
-                    onSelectItem={(item) => onOperatorSelect(item.value)}
-                    containerStyle={{ height: 100, marginBottom: 10 }}
-                    style={{ backgroundColor: "transparent" }}
-                    dropDownStyle={{ backgroundColor: "transparent" }}
-                  />
-                </View>
-                <View>
-                  <Text style={{ fontWeight: "500" }}>Amount:</Text>
-                  <TextInput
-                    style={styles.inputText}
-                    placeholder="Enter Amount"
-                    value={amount}
-                    onChangeText={setAmount}
-                    keyboardType="numeric"
-                  />
-                </View>
-                <TouchableOpacity
-                  style={styles.rechargeButton}
-                  onPress={submitDthData}
-                >
-                  <Text style={{ color: "#fff" }}>Recharge</Text>
-                </TouchableOpacity>
-                <View style={styles.planButtonContainer}>
-                  {Object.keys(browsePlans).map(renderPlanButton)}
-                </View>
-              </>
-            }
-            data={browsePlans[selectedCategory] || []}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item, index }) => renderPlanDetails(item, index)}
-            ListEmptyComponent={
-              <Text style={{ alignSelf: "center", zIndex: 0 }}>
-                No Plans Available
-              </Text>
-            }
-          />
-
-          <Modal animationType="slide" transparent visible={showModal}>
+    <LinearGradient colors={["#00C853", "#1E88E5"]} style={{ flex: 1 }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "#fff",
+            padding: moderateScale(8),
+            borderRadius: moderateScale(10),
+          }}
+        >
+          <Text style={{ fontSize: moderateScale(18), fontWeight: 700 }}>
+            DTH Recharge
+          </Text>
+          {loading ? (
+            <ActivityIndicator
+              size="large"
+              color="#0000ff"
+              style={{ flex: 1 }}
+            />
+          ) : (
+            <FlatList
+              data={[{ key: "form" }, { key: "plans" }]}
+              keyExtractor={(item) => item.key}
+              renderItem={({ item }) => {
+                if (item.key === "form") {
+                  return (
+                    <View>
+                      <Text style={styles.title}>Operator:</Text>
+                      <DropDownPicker
+                        open={open}
+                        value={selectedOperatorId}
+                        items={dthOperators}
+                        setOpen={setOpen}
+                        setValue={setSelectedOperatorId}
+                        setItems={setDthOperators}
+                        placeholder="Select Provider"
+                        style={styles.dropdown}
+                        dropDownContainerStyle={styles.dropdownContainer}
+                      />
+                      <Text style={styles.title}>Subscriber ID :</Text>
+                      <TextInput
+                        style={styles.textInputStyle}
+                        value={subscriberId}
+                        onChangeText={handleSubscriberIdChange}
+                        placeholder="Enter Subscriber ID"
+                      />
+                      <Text style={styles.title}>Amount:</Text>
+                      <TextInput
+                        style={styles.textInputStyle}
+                        value={amount}
+                        onChangeText={setAmount}
+                        placeholder="Enter Recharge Amount"
+                      />
+                      {submitLoader ? (
+                        <View style={{ marginTop: moderateScale(8) }}>
+                          <ActivityIndicator size="large" color="#32a877" />
+                        </View>
+                      ) : (
+                        <TouchableOpacity
+                          style={styles.buttonContainer}
+                          onPress={submitDthData}
+                        >
+                          <Text style={{ color: "#fff" }}>Recharge</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  );
+                } else if (item.key === "plans") {
+                  return browsePlans && Object.keys(browsePlans).length > 0 ? (
+                    <View>
+                      <View style={styles.planButtonContainer}>
+                        {Object.keys(browsePlans).map((subItem, subIndex) => (
+                          <TouchableOpacity
+                            key={subIndex}
+                            style={styles.planDetails}
+                            onPress={() => checkPlan(subItem)}
+                          >
+                            <Text>{subItem}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                      {showPlan ? (
+                        <View>
+                          {showPlan.map((plan, index) => (
+                            <View key={index}>
+                              <TouchableOpacity
+                                key={index}
+                                style={styles.planDetails}
+                                onPress={() => setAmount(plan.rs)}
+                              >
+                                <Text
+                                  style={{
+                                    fontSize: 18,
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  ₹ {plan.rs}
+                                </Text>
+                                <Text style={{ fontSize: 15 }}>
+                                  {plan.desc || "No description available"}
+                                </Text>
+                                <Text style={{ fontSize: 18 }}>
+                                  ⏳ Validity: {plan.validity}
+                                </Text>
+                              </TouchableOpacity>
+                            </View>
+                          ))}
+                        </View>
+                      ) : (
+                        <Text></Text>
+                      )}
+                    </View>
+                  ) : (
+                    <Text style={{ textAlign: "center" }}>
+                      No Plans Available
+                    </Text>
+                  );
+                }
+              }}
+            />
+          )}
+          <Modal
+            animationType="none"
+            transparent={true}
+            visible={errorModal}
+            onRequestClose={() => setErrorModal(false)}
+          >
             <View style={styles.modalBackground}>
               <View style={styles.modalContainer}>
-                <Text style={styles.modalTitle}>Recharge Successful</Text>
-                <Text>{successMessage}</Text>
+                <Text>{errorMessage}</Text>
                 <TouchableOpacity
                   style={styles.proceedButton}
-                  onPress={toggleModal}
+                  onPress={() => {
+                    setErrorModal(false);
+                  }}
                 >
                   <Text style={{ color: "#fff" }}>Ok</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </Modal>
-          {/* Error Modal */}
-          <Modal animationType="slide" transparent visible={errorModal}>
+          <Modal
+            animationType="fade"
+            transparent={true}
+            onRequestClose={() => setShowModal(false)}
+            visible={showModal}
+          >
             <View style={styles.modalBackground}>
               <View style={styles.modalContainer}>
-                <Text style={styles.modalTitle}>Failed</Text>
-                <Text>{errorMessage}</Text>
+                <Text>{successMessage}</Text>
                 <TouchableOpacity
-                  style={[styles.proceedButton, { backgroundColor: "red" }]}
-                  onPress={toggleErrorModal}
+                  style={styles.proceedButton}
+                  onPress={() => {
+                    setShowModal(false);
+                    setAmount("");
+                    setSubscriberId("");
+                    setSubmitLoader(false);
+                    setOperator("");
+                    setBrowsePlans({});
+                    setShowPlan([]);
+                  }}
                 >
-                  <Text style={{ color: "#fff" }}>Cancel</Text>
+                  <Text style={{ color: "#fff" }}>Ok</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </Modal>
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 };
 
@@ -271,67 +340,48 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     justifyContent: "center",
-    backgroundColor: "#4B83C3",
-    paddingVertical: 40,
   },
   mainContainer: {
-    backgroundColor: "#F6F4F0",
+    backgroundColor: "#fff",
     padding: 5,
     borderRadius: 10,
-    boxShadow: "0px 2px 3.5px rgba(0, 0, 0, 0.25)",
     elevation: 5,
-    gap: 10,
-    height: height * 0.9,
-    paddingVertical: 20,
-    marginVertical: 20, // Adds space above and below this container
+    marginVertical: 20,
   },
-  heading: {
-    fontSize: 20,
-    alignSelf: "center",
-  },
-
-  inputText: {
-    borderRadius: 8,
-    borderWidth: 1,
-    height: moderateScale(45),
-    paddingLeft: 10,
-    marginBottom: 10,
-    fontSize: 20,
-  },
-  rechargeButton: {
-    backgroundColor: "blue",
-    borderRadius: 8,
-    height: moderateScale(30),
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 20,
-  },
-  operatorDetails: {
+  midContainer: {
     marginTop: 10,
-    padding: 10,
-    backgroundColor: "#f0f0f0",
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  textInputStyle: {
+    borderWidth: 1,
+    borderColor: "#ccc",
     borderRadius: 8,
-    marginBottom: 10,
+    backgroundColor: "#fff",
+    height: 60,
+    paddingHorizontal: 10,
+  },
+  buttonContainer: {
+    backgroundColor: "#000",
+    alignItems: "center",
+    padding: 10,
+    borderRadius: 10,
+    marginTop: moderateScale(10),
   },
   planDetails: {
-    flexDirection: "row",
-    justifyContent: "space-between",
     borderWidth: 1,
     borderRadius: 10,
     padding: 10,
     marginBottom: 10,
-    gap: 10,
-    flexShrink: 0,
   },
   planButtonText: {
-    backgroundColor: "#a1d186",
-    borderRadius: 10,
-    paddingVertical: 5,
-    paddingHorizontal: 7,
     fontSize: moderateScale(18),
-    color: "#ffff",
-    fontWeight: 500,
-    alignSelf: "center",
+    fontWeight: "bold",
+    color: "#fff",
+    textAlign: "center",
   },
   planButtonContainer: {
     flexDirection: "row",
@@ -340,12 +390,15 @@ const styles = StyleSheet.create({
     marginTop: 10,
     justifyContent: "center",
   },
-  planContainer: {
-    height: 300,
-    gap: 20,
-    marginTop: 10,
+  planDetails: {
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 10,
+    gap: 10,
+    flexShrink: 0,
   },
-
   modalBackground: {
     flex: 1,
     justifyContent: "center",

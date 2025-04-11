@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,156 +8,288 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  Alert,
+  ActivityIndicator,
+  Platform,
+  Dimensions,
+  Modal,
 } from "react-native";
-import React, { useEffect, useState } from "react";
-import { moderateScale } from "react-native-size-matters";
+import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { moderateScale } from "react-native-size-matters";
+import { updateProfile } from "../services/LoginServices";
+import { baseUrl } from "@/src/app/services/ApiServices";
+import { router } from "expo-router";
+const { width, height } = Dimensions.get("window");
 
 const UpdateProfile = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [password, setPassword] = useState("");
   const [address, setAddress] = useState("");
+  const [profileImage, setProfileImage] = useState(null);
+  const [takeImage, SetTakeImage] = useState(null);
+  const [pic, setPic] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [refresh, setRefresh] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [successModal, setSuccssModal] = useState(false);
+
+  const storage = Platform.OS === "web" ? global.localStorage : AsyncStorage;
   useEffect(() => {
+    setLoading(true);
     const fetchData = async () => {
-      let data = await AsyncStorage.getItem("myData");
-      data = JSON.parse(data);
-      setUsername(data.name);
-      setEmail(data.email);
-      setPhoneNumber(data.phone);
-      setAddress(data.address);
+      try {
+        let data = await storage.getItem("myData");
+        data = JSON.parse(data);
+
+        if (data) {
+          setUsername(data.name || "");
+          setEmail(data.email || "");
+          setPhoneNumber(data.phone || "");
+          setAddress(data.address || "");
+          setProfileImage(data.image || null);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
     };
     fetchData();
-  }, []);
+  }, [refresh]);
+
+  // Pick Image from Gallery
+  const pickImage = async () => {
+    setPic(true);
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission Required",
+        "Please allow access to your gallery."
+      );
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images", "videos"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const selectedUri = result.assets[0];
+
+      SetTakeImage(selectedUri.uri);
+      setProfileImage(selectedUri);
+
+      let storedData = await AsyncStorage.getItem("myData");
+      storedData = storedData ? JSON.parse(storedData) : {};
+      storedData.profileImage = selectedUri;
+      await AsyncStorage.setItem("myData", JSON.stringify(storedData));
+    }
+  };
+
+  const handleProfileUpdate = async () => {
+    setLoading(true);
+    if (!username || !address) {
+      Alert.alert("Error", "Please fill in all required fields!");
+      setLoading(false);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("name", username);
+    formData.append("email", email);
+    formData.append("phone", phoneNumber);
+    formData.append("address", address);
+
+    if (takeImage) {
+      formData.append("image", profileImage.file);
+    }
+
+    try {
+      const response = await updateProfile(formData);
+
+      setSuccessMessage("Profile updated successfully!");
+
+      await storage.setItem(
+        "myData",
+        JSON.stringify({
+          name: username,
+          email,
+          phone: phoneNumber,
+          address,
+          image: profileImage.file,
+        })
+      );
+      setPic(false);
+      setLoading(false);
+
+      setSuccssModal(true);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      Alert.alert("Error", "Could not update profile.");
+      setPic(false);
+      setLoading(false);
+      setRefresh((prev) => !prev);
+      setSuccssModal(true);
+    }
+  };
+
+  const navigateToLogin = async () => {
+    await storage.removeItem("myData");
+    router.push("/(auth)");
+    setSuccssModal(false);
+  };
 
   return (
     <SafeAreaView style={styles.mainContainer}>
-      <View
-        style={[
-          styles.mainContainer,
-          {
-            paddingHorizontal: moderateScale(10),
-            paddingVertical: moderateScale(10),
-          },
-        ]}
-      >
-        <ScrollView>
-          <View>
-            <Image
-              source={require("@/src/assets/images/userLargeIcon.png")}
-              resizeMode="contain"
-              style={{ width: moderateScale(100), height: moderateScale(100) }}
-            />
-            <View
-              style={{ flexDirection: "row", gap: 10, top: -35, left: 100 }}
-            >
-              <TouchableOpacity>
+      <View style={styles.innerContainer}>
+        {loading ? (
+          <ActivityIndicator size="large" color="#000" />
+        ) : (
+          <ScrollView>
+            <View style={styles.imageContainer}>
+              {pic ? (
                 <Image
-                  source={require("@/src/assets/images/cameraIcon.png")}
-                  resizeMode="contain"
-                  style={{
-                    width: moderateScale(20),
-                    height: moderateScale(20),
-                  }}
+                  source={{ uri: takeImage }}
+                  style={styles.profileImage}
                 />
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <Text style={{ fontSize: moderateScale(14) }}>
-                  Upload from gallery
-                </Text>
+              ) : (
+                <Image
+                  source={{ uri: `${baseUrl}/uploads/${profileImage}` }}
+                  style={styles.profileImage}
+                />
+              )}
+              <TouchableOpacity onPress={pickImage} style={styles.uploadButton}>
+                <Text style={styles.uploadText}>Upload Image</Text>
               </TouchableOpacity>
             </View>
-          </View>
-          <ScrollView>
+
             <View style={styles.midContainer}>
-              <View>
-                <Text>Username</Text>
-                <TextInput
-                  style={styles.inputField}
-                  value={username}
-                  onChangeText={(text) => setUsername(text)}
-                />
-              </View>
-              <View>
-                <Text>Email i'd</Text>
-                <TextInput
-                  style={styles.inputField}
-                  value={email}
-                  keyboardType="email-address"
-                  editable={false}
-                  onChangeText={(text) => setEmail(text)}
-                  selectTextOnFocus={false}
-                />
-              </View>
-              <View>
-                <Text>Phone Number</Text>
-                <TextInput
-                  style={styles.inputField}
-                  value={phoneNumber}
-                  onChangeText={(text) => setPhoneNumber(text)}
-                />
-              </View>
-              <View>
-                <Text>Password</Text>
-                <TextInput
-                  style={styles.inputField}
-                  value={password}
-                  secureTextEntry={true}
-                  onChangeText={(text) => setPassword(text)}
-                />
-              </View>
-              <View>
-                <Text>Address</Text>
-                <TextInput
-                  style={styles.inputField}
-                  value={address}
-                  multiline={true}
-                  numberOfLines={4}
-                  onChangeText={(text) => setAddress(text)}
-                  textAlignVertical="top"
-                />
-              </View>
-              <View>
-                <TouchableOpacity style={styles.updateButton}>
-                  <Text style={{ color: "#ffff", fontSize: 17 }}>Update</Text>
-                </TouchableOpacity>
-              </View>
+              <InputField
+                label="Username"
+                value={username}
+                setValue={setUsername}
+              />
+              <InputField label="Email" value={email} editable={false} />
+              <InputField
+                label="Phone Number"
+                value={phoneNumber}
+                editable={false}
+              />
+              <InputField
+                label="Address"
+                value={address}
+                setValue={setAddress}
+                multiline
+              />
+
+              <TouchableOpacity
+                style={styles.updateButton}
+                onPress={handleProfileUpdate}
+              >
+                <Text style={styles.updateButtonText}>Update Profile</Text>
+              </TouchableOpacity>
+              <Modal
+                animationType="fade"
+                transparent={true}
+                visible={successModal}
+                onRequestClose={() => setSuccssModal(false)}
+              >
+                <View style={styles.modalBackground}>
+                  <View style={styles.modalContainer}>
+                    <Text style={styles.modalTitle}>{successMessage}</Text>
+                    <TouchableOpacity onPress={navigateToLogin}>
+                      <Text style={styles.successbutton}>Ok</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
             </View>
           </ScrollView>
-        </ScrollView>
+        )}
       </View>
     </SafeAreaView>
   );
 };
+
+const InputField = ({
+  label,
+  value,
+  setValue,
+  editable = true,
+  multiline = false,
+}) => (
+  <View>
+    <Text>{label}</Text>
+    <TextInput
+      style={styles.inputField}
+      value={value}
+      onChangeText={setValue}
+      editable={editable}
+      multiline={multiline}
+      textAlignVertical={multiline ? "top" : "center"}
+    />
+  </View>
+);
+
+// Styles
 const styles = StyleSheet.create({
-  mainContainer: {
-    backgroundColor: "#4B83C3",
-    height: "100%",
-  },
-  midContainer: {
-    paddingVertical: moderateScale(10),
+  mainContainer: { backgroundColor: "#4B83C3", height: "100%" },
+  innerContainer: {
     paddingHorizontal: moderateScale(10),
-    backgroundColor: "#F6F4F0",
-    gap: 10,
-    marginHorizontal: moderateScale(10),
-    borderRadius: moderateScale(10),
+    paddingVertical: moderateScale(10),
   },
-  inputField: {
+  imageContainer: { alignItems: "center" },
+  profileImage: {
+    width: moderateScale(100),
+    height: moderateScale(100),
+    borderRadius: moderateScale(50),
+  },
+  uploadButton: {
+    marginTop: 10,
+    backgroundColor: "#171F1D",
+    padding: 10,
     borderRadius: 10,
-    borderWidth: 1,
-    width: "80%",
-    padding: moderateScale(5),
+    marginBottom: moderateScale(10),
   },
+  uploadText: { color: "#FFF" },
+  midContainer: { backgroundColor: "#F6F4F0", padding: 10, borderRadius: 10 },
+  inputField: { borderWidth: 1, padding: moderateScale(5), borderRadius: 10 },
   updateButton: {
     backgroundColor: "#171F1D",
-    textAlign: "center",
-    borderRadius: 10,
-    fontSize: 15,
-    alignItems: "center",
     padding: 10,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: moderateScale(10),
+  },
+  updateButtonText: { color: "#FFF" },
+  modalBackground: {
+    flex: 1,
     justifyContent: "center",
-    width: "80%",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContainer: {
+    backgroundColor: "#FFF",
+    padding: 20,
+    borderRadius: 10,
+    width: width * 0.8,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  successbutton: {
+    backgroundColor: "#04d43c",
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 20,
   },
 });
 

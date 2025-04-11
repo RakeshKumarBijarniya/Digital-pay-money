@@ -10,21 +10,21 @@ import {
   TouchableOpacity,
   Modal,
   BackHandler,
+  Dimensions,
 } from "react-native";
-import { Dimensions } from "react-native";
-const { width, height } = Dimensions.get("window");
 import React, { useEffect, useState, useCallback } from "react";
 import { moderateScale } from "react-native-size-matters";
 import { transferWalletMoney } from "../services/LoginServices";
-
-import { router } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 
-const WalletToWallet = () => {
-  const [loading, setLoading] = useState(true);
+const { width, height } = Dimensions.get("window");
 
-  const [mobileNumber, setMobileNumber] = useState("");
+const WalletToWallet = () => {
+  const { mobile, name } = useLocalSearchParams();
+  const [mobileNumber, setMobileNumber] = useState(mobile || "");
   const [amount, setAmount] = useState("");
+  const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [errorModal, setErrorModal] = useState(false);
   const [successModal, setSuccessModal] = useState(false);
@@ -40,12 +40,15 @@ const WalletToWallet = () => {
       setErrorModal(true);
       return;
     }
+
     if (mobileNumber.length !== 10) {
       setErrorMessage("Please Enter Valid Phone Number");
       setErrorModal(true);
       return;
     }
+
     setLoading(true);
+
     try {
       const data = {
         mobileNumber: mobileNumber,
@@ -53,17 +56,19 @@ const WalletToWallet = () => {
       };
 
       const response = await transferWalletMoney(data);
+
       if (response.status === 200) {
         setSuccessMessage(response.data.message);
         setSuccessModal(true);
       } else {
         setErrorMessage(response.response.data.message);
+        setErrorModal(true);
       }
+
       setLoading(false);
     } catch (e) {
-      setErrorMessage(e.response.data.message);
+      setErrorMessage(e?.response?.data?.message || "Something went wrong");
       setErrorModal(true);
-
       setLoading(false);
     }
   };
@@ -90,39 +95,56 @@ const WalletToWallet = () => {
     };
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      setMobileNumber(mobile || "");
+      setAmount("");
+      setLoading(false);
+    }, [mobile])
+  );
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
+    <LinearGradient
+      colors={["#00C853", "#1E88E5"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
     >
-      <LinearGradient
-        colors={["#00C853", "#1E88E5"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ flex: 1, borderRadius: 10 }}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
       >
         <ScrollView keyboardShouldPersistTaps="handled">
           <View style={styles.mainContainer}>
+            <Text style={[styles.title, { textAlign: "center" }]}>
+              Wallet-to-Wallet Transfer
+            </Text>
+
             {loading ? (
-              <ActivityIndicator
-                size="large"
-                color="#0000ff"
-                style={{ justifyContent: "center", alignItems: "center" }}
-              />
+              <ActivityIndicator size="large" color="#0000ff" />
             ) : (
               <>
-                <Text style={[styles.title, { textAlign: "center" }]}>
-                  Wallet-to-Wallet Transfer
-                </Text>
-                <Text>MObile Number:</Text>
-                <TextInput
-                  placeholder="Enter Mobile Number"
-                  style={styles.textInputStyle}
-                  value={mobileNumber}
-                  onChangeText={handleMobileNumber}
-                  keyboardType="numeric"
-                  maxLength={10}
-                />
+                {name ? (
+                  <Text style={styles.receiverText}>
+                    Receiver: {name}
+                    {mobileNumber && mobileNumber.length === 10
+                      ? ` (******${mobileNumber.slice(-4)})`
+                      : ""}
+                  </Text>
+                ) : (
+                  <>
+                    <Text>Mobile Number:</Text>
+                    <TextInput
+                      placeholder="Enter Mobile Number"
+                      style={styles.textInputStyle}
+                      value={mobileNumber}
+                      onChangeText={handleMobileNumber}
+                      keyboardType="numeric"
+                      maxLength={10}
+                    />
+                  </>
+                )}
 
                 <Text>Amount:</Text>
                 <TextInput
@@ -132,6 +154,7 @@ const WalletToWallet = () => {
                   onChangeText={setAmount}
                   keyboardType="numeric"
                 />
+
                 <TouchableOpacity
                   style={styles.buttonContainer}
                   onPress={handleSubmit}
@@ -141,6 +164,8 @@ const WalletToWallet = () => {
               </>
             )}
           </View>
+
+          {/* Error Modal */}
           <Modal
             animationType="none"
             transparent={true}
@@ -152,15 +177,15 @@ const WalletToWallet = () => {
                 <Text>{errorMessage}</Text>
                 <TouchableOpacity
                   style={styles.proceedButton}
-                  onPress={() => {
-                    setErrorModal(false);
-                  }}
+                  onPress={() => setErrorModal(false)}
                 >
                   <Text style={{ color: "#fff" }}>Ok</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </Modal>
+
+          {/* Success Modal */}
           <Modal
             animationType="slide"
             transparent={true}
@@ -172,9 +197,7 @@ const WalletToWallet = () => {
                 <Text>{successMessage}</Text>
                 <TouchableOpacity
                   style={styles.proceedButton}
-                  onPress={() => {
-                    setSuccessModal(false);
-                  }}
+                  onPress={() => setSuccessModal(false)}
                 >
                   <Text style={{ color: "#fff" }}>Ok</Text>
                 </TouchableOpacity>
@@ -182,41 +205,33 @@ const WalletToWallet = () => {
             </View>
           </Modal>
         </ScrollView>
-      </LinearGradient>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#4B83C3",
   },
   mainContainer: {
-    flex: 1,
     padding: 20,
     borderRadius: 10,
     elevation: 5,
+    backgroundColor: "#fff",
     gap: 10,
+    height: height * 0.9,
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 15,
   },
-  modalBackground: {
-    flex: 1, // Takes full screen
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
-  },
-
-  modalContainer: {
-    backgroundColor: "#FFF",
-    padding: 20,
-    borderRadius: 10,
-    width: width * 0.8,
-    alignItems: "center",
+  receiverText: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 10,
   },
   textInputStyle: {
     marginTop: moderateScale(5),
@@ -228,44 +243,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: moderateScale(10),
     fontSize: moderateScale(13),
   },
-  proceedButton: {
-    backgroundColor: "green",
-    padding: 10,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-
-  closeButton: {
-    backgroundColor: "#FF6347",
-    padding: 10,
-    borderRadius: 10,
-    marginTop: 20,
-  },
   buttonContainer: {
     backgroundColor: "#000",
     alignItems: "center",
     padding: 10,
     borderRadius: 10,
   },
-  planDetails: {
-    justifyContent: "space-between",
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 10,
-    gap: 10,
-    flexShrink: 0,
-    flexDirection: "column",
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  planButtonText: {
-    backgroundColor: "#a1d186",
+  modalContainer: {
+    backgroundColor: "#FFF",
+    padding: 20,
     borderRadius: 10,
-    paddingVertical: 5,
-    paddingHorizontal: 7,
-    fontSize: moderateScale(18),
-    color: "#ffff",
-    fontWeight: 500,
-    alignSelf: "center",
+    width: width * 0.8,
+    alignItems: "center",
+  },
+  proceedButton: {
+    backgroundColor: "green",
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 20,
   },
 });
 

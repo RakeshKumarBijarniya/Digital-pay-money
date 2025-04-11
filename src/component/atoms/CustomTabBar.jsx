@@ -1,14 +1,13 @@
 import { router, usePathname } from "expo-router";
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { moderateScale } from "react-native-size-matters";
 
 const CustomTabBar = () => {
-  const pathname = usePathname(); // Get current route
+  const pathname = usePathname();
 
   return (
     <View style={styles.container}>
-      {/* Home Tab */}
       <TouchableOpacity
         onPress={() => router.replace("/(main)/(tabs)")}
         style={[
@@ -16,9 +15,19 @@ const CustomTabBar = () => {
           pathname === "/(main)/(tabs)" && styles.focusedTab,
         ]}
       >
+        <Image
+          source={require("@/src/assets/images/HomeIcon.png")}
+          resizeMode="contain"
+          style={{
+            width: moderateScale(30),
+            height: moderateScale(30),
+            top: moderateScale(8),
+          }}
+        />
         <Text
           style={[
             styles.tabText,
+
             pathname === "/(main)/(tabs)" && styles.focusedText,
           ]}
         >
@@ -28,36 +37,36 @@ const CustomTabBar = () => {
 
       {/* History Tab */}
       <TouchableOpacity
-        onPress={() => router.replace("/(main)/Scanner")}
+        onPress={() => router.replace("/(main)/BarCodeScanner")}
         style={[
           styles.tabItem,
-          pathname === "/(main)/Scanner" && styles.focusedTab,
+          pathname === "/(main)/BarCodeScanner" && styles.focusedTab,
         ]}
       >
-        <Text
-          style={[
-            styles.tabText,
-            pathname === "/(main)/Scanner" && styles.focusedText,
-          ]}
-        >
-          Camera
-        </Text>
+        <Image
+          source={require("@/src/assets/images/scannerIcon.png")}
+          resizeMode="contain"
+          style={{
+            width: moderateScale(50),
+            height: moderateScale(50),
+            top: moderateScale(5),
+          }}
+        />
       </TouchableOpacity>
       <TouchableOpacity
-        onPress={() => router.replace("/(main)/(tabs)/History")}
-        style={[
-          styles.tabItem,
-          pathname === "/(main)/(tabs)/History" && styles.focusedTab,
-        ]}
+        onPress={() => router.push("/(main)/History")}
+        style={[styles.tabItem]}
       >
-        <Text
-          style={[
-            styles.tabText,
-            pathname === "/(main)/(tabs)/History" && styles.focusedText,
-          ]}
-        >
-          History
-        </Text>
+        <Image
+          source={require("@/src/assets/images/HistoryIcon.png")}
+          resizeMode="contain"
+          style={{
+            width: moderateScale(30),
+            height: moderateScale(30),
+            top: moderateScale(8),
+          }}
+        />
+        <Text style={[styles.tabText]}>History</Text>
       </TouchableOpacity>
     </View>
   );
@@ -83,7 +92,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#FFD700", // Gold color for highlight
   },
   tabText: {
-    color: "#B0B0B0", // Light gray by default
+    color: "#fff", // Light gray by default
     fontSize: moderateScale(14),
     fontWeight: "500",
   },

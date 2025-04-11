@@ -7,6 +7,9 @@ const AuthRoot = () => {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="Login" />
+      <Stack.Screen name="CreateAccount" />
+      <Stack.Screen name="ForgotPassword" />
+      <Stack.Screen name="UserCreate" />
     </Stack>
   );
 };

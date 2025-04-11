@@ -44,6 +44,7 @@ const Login = () => {
     try {
       const formData = { emailORphone, password };
       const response = await loginServiceApi(formData);
+
       setLoading(false);
 
       if (response.status === 200) {
@@ -115,13 +116,25 @@ const Login = () => {
                   <Text style={styles.loginButtonText}>Login</Text>
                 </TouchableOpacity>
               )}
-
-              <TouchableOpacity>
-                <Text style={styles.signupText}>
-                  Don't have an account?
-                  <Text style={styles.signupLink}> Signup here</Text>
-                </Text>
-              </TouchableOpacity>
+              <View
+                style={{
+                  gap: moderateScale(20),
+                }}
+              >
+                <TouchableOpacity
+                  onPress={() => router.push("/(auth)/CreateAccount")}
+                >
+                  <Text style={styles.signupText}>
+                    Don't have an account?
+                    <Text style={styles.signupLink}> Signup here</Text>
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => router.push("/(auth)/ForgotPassword")}
+                >
+                  <Text style={styles.signupText}>Forgot Your Password</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Support Section */}
@@ -211,27 +224,20 @@ const styles = StyleSheet.create({
     borderWidth: Platform.OS === "web" ? 1 : 0,
     borderColor: Platform.OS === "web" ? "rgba(0, 0, 0, 0.2)" : "transparent",
 
-    // iOS Shadow
     shadowColor: "#EEF3F969",
     shadowOffset: { width: 2, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
 
-    //Android Shadow
     shadowColor: "#EEF3F969",
     shadowOffset: { width: 5, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 1,
     elevation: 0,
-    flex: 1, // Allow input to take up remaining space
-    fontSize: Platform.OS === "web" ? 25 : 17, // For Android shadow
+    flex: 1,
+    fontSize: Platform.OS === "web" ? 25 : 17,
   },
-  // textInput: {
-  //   flex: 1, // Allow input to take up remaining space
-  //   fontSize: 17,
-  //   color: "#0000008F",
-  //   backgroundColor: "trasperent",
-  // },
+
   errorText: {
     color: "red",
     fontSize: 17,
@@ -261,7 +267,9 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   supportContainer: {
-    flex: 1,
+    width: width * 0.9,
+    alignSelf: "flex-start",
+    marginLeft: width * 0.05,
     paddingVertical: 10,
   },
   supportText: {
@@ -272,22 +280,24 @@ const styles = StyleSheet.create({
   supportItem: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 10,
     marginVertical: 5,
+  },
+  supportLabel: {
+    fontSize: 17,
+    fontWeight: "500",
+    color: "#F6F4F096",
   },
   supportIcon: {
     width: moderateScale(15),
     height: moderateScale(15),
     resizeMode: "contain",
   },
-  supportLabel: {
-    fontSize: 17,
-    fontWeight: "500",
-    color: "#F6F4F096",
-    marginLeft: 20,
-  },
+
   bottomContainer: {
     alignItems: "center",
     marginVertical: 20,
+    alignSelf: "flex-start",
   },
   brandingText: {
     color: "#F6F4F04F",

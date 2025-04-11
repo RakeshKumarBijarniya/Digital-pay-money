@@ -1,15 +1,23 @@
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  Modal,
+  Platform,
+} from "react-native";
 import React, { useEffect, useState } from "react";
-import { useNavigation } from "expo-router";
 import { moderateScale, scale } from "react-native-size-matters";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const CustomHeader = ({ navigation }) => {
   const [userData, setUserData] = useState(null);
+
   useEffect(() => {
     const fetchData = async () => {
-      const data = await AsyncStorage.getItem("myData");
-
+      const storage =
+        Platform.OS === "web" ? global.localStorage : AsyncStorage;
+      const data = await storage.getItem("myData");
       setUserData(JSON.parse(data));
     };
     fetchData();
@@ -45,9 +53,19 @@ const CustomHeader = ({ navigation }) => {
           />
 
           {userData ? (
-            <Text style={{ fontSize: 17, fontWeight: 600 }}>
-              {userData.name}
-            </Text>
+            <>
+              <Image
+                source={{ uri: `${userData.image}` }}
+                style={{
+                  width: moderateScale(30),
+                  height: moderateScale(30),
+                  right: moderateScale(30),
+                }}
+              />
+              <Text style={{ fontSize: 17, fontWeight: 600 }}>
+                {userData.name}
+              </Text>
+            </>
           ) : (
             <Text>Hello Parul</Text>
           )}

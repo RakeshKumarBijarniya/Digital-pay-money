@@ -8,9 +8,9 @@ const Coupons = () => {
     <View style={styles.mainContainer}>
       <Text
         style={{
+          fontWeight: "600",
           fontSize: 17,
           fontFamily: "SansitaSwashedBold",
-          paddingTop: 20,
         }}
       >
         Coupons

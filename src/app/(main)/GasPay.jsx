@@ -185,7 +185,7 @@ const GasPay = () => {
         <View style={styles.midContainer}>
           <Text style={styles.title}>Gas Service Provider:</Text>
           <View style={{ gap: moderateScale(30) }}>
-            <View style={{ zIndex: open ? 1000 : 1 }}>
+            <View>
               <DropDownPicker
                 open={open}
                 value={providerId}

@@ -26,6 +26,21 @@ const PaymentList = () => {
         <View style={{ alignItems: "center", width: "25%", marginTop: 20 }}>
           <TouchableOpacity
             style={{ alignItems: "center", gap: 10 }}
+            onPress={() => router.push("/(main)/WalletToWallet")}
+          >
+            <Image
+              source={require("@/src/assets/images/transferMoney.png")}
+              resizeMode="contain"
+              style={{ width: moderateScale(30), height: 30 }}
+            />
+            <Text style={{ fontFamily: "SansitaSwashed", fontSize: 13 }}>
+              Transfer Money
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View style={{ alignItems: "center", width: "25%", marginTop: 20 }}>
+          <TouchableOpacity
+            style={{ alignItems: "center", gap: 10 }}
             onPress={() => router.push("/(main)/MobileRecharge")}
           >
             <Image
@@ -68,21 +83,6 @@ const PaymentList = () => {
             />
             <Text style={{ fontFamily: "SansitaSwashed", fontSize: 13 }}>
               Electricity
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <View style={{ alignItems: "center", width: "25%", marginTop: 20 }}>
-          <TouchableOpacity
-            style={{ alignItems: "center", gap: 10 }}
-            onPress={() => router.push("/(main)/LicBillPayment")}
-          >
-            <Image
-              source={require("@/src/assets/images/assurance.png")}
-              resizeMode="contain"
-              style={{ width: moderateScale(30), height: 30 }}
-            />
-            <Text style={{ fontFamily: "SansitaSwashed", fontSize: 13 }}>
-              LIC
             </Text>
           </TouchableOpacity>
         </View>
@@ -138,15 +138,15 @@ const PaymentList = () => {
         <View style={{ alignItems: "center", width: "25%", marginTop: 20 }}>
           <TouchableOpacity
             style={{ alignItems: "center", gap: 10 }}
-            onPress={() => router.push("/(main)/Electricity")}
+            onPress={() => router.push("/(main)/LicBillPayment")}
           >
             <Image
-              source={require("@/src/assets/images/moreIcon.png")}
+              source={require("@/src/assets/images/assurance.png")}
               resizeMode="contain"
               style={{ width: moderateScale(30), height: 30 }}
             />
             <Text style={{ fontFamily: "SansitaSwashed", fontSize: 13 }}>
-              More
+              LIC
             </Text>
           </TouchableOpacity>
         </View>

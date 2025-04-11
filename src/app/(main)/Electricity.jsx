@@ -8,6 +8,7 @@ import {
   BackHandler,
   Modal,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 
 import DropDownPicker from "react-native-dropdown-picker";
@@ -19,6 +20,8 @@ import {
 } from "../services/LoginServices";
 import { router } from "expo-router";
 import { Dimensions } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import LottieView from "lottie-react-native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -29,10 +32,11 @@ const Electricity = () => {
   const [providerId, setProviderId] = useState("");
   const [billDetails, setBillDetails] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const [fetchLoader, setFetchLoader] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [successModalShow, setsuccessModalShow] = useState(false);
+  const [processLoader, setProcessLoader] = useState(false);
 
   const [open, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -40,37 +44,46 @@ const Electricity = () => {
 
   const fetchBillDetails = async () => {
     if (!providerId || !consumerNumber.trim()) {
-      alert("Please select a provider and enter a valid consumer number");
+      Alert.alert("Please select a provider and enter a valid consumer number");
       return;
     }
-
-    const data = {
-      operatorId: providerId,
-      canumber: consumerNumber,
-      mode: "online",
-      ad1: "pass value according to operator",
-    };
-    const response = await getbillDetails(data);
-    if (response?.data?.status) {
-      setBillDetails({
-        consumerName: response.data.name,
-        dueDate: response.data.duedate,
-        billAmount: response.data.amount,
-      });
-      setShowModal(true);
-    } else {
-      alert("Fetch Failed");
+    try {
+      setFetchLoader(true);
+      const data = {
+        operatorId: providerId,
+        canumber: consumerNumber,
+        mode: "online",
+        ad1: "pass value according to operator",
+      };
+      const response = await getbillDetails(data);
+      console.log(response);
+      if (response?.data?.status) {
+        setBillDetails({
+          consumerName: response.data.name,
+          dueDate: response.data.duedate,
+          billAmount: response.data.amount,
+        });
+        setShowModal(true);
+        setFetchLoader(false);
+      } else {
+        alert("Fetch Failed");
+        setFetchLoader(false);
+      }
+    } catch (e) {
+      console.log(e.message);
+      setFetchLoader(false);
     }
   };
 
   const handlePayBill = async () => {
-    setLoading(true);
     if (!billDetails) {
       alert("Please fetch the bill details before proceeding to payment.");
       return;
     }
     setShowModal(false);
+
     try {
+      setProcessLoader(true);
       const data = {
         BillType: "Electricity",
         operator: providerId,
@@ -90,16 +103,19 @@ const Electricity = () => {
         },
       };
       const response = await handleSubmitBill(data);
+
       if (response?.status === "SUCCESS" && response?.data?.status) {
         setsuccessModalShow(true);
-        setLoading(false);
+        setProcessLoader(false);
       }
     } catch (e) {
       console.log(e.message);
+      setProcessLoader(false);
     }
   };
 
   const fetchOperators = async () => {
+    setLoading(true);
     try {
       const response = await electricityApi();
 
@@ -117,8 +133,10 @@ const Electricity = () => {
           value: provider.id,
         }))
       );
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching operators:", error);
+      setLoading(false);
     }
   };
 
@@ -142,6 +160,7 @@ const Electricity = () => {
 
   const toggleModal = () => {
     setShowModal(!showModal);
+    setProcessLoader(false);
   };
 
   // const formattedProviders = electricityProviders.map((provider, ind) => ({
@@ -150,119 +169,164 @@ const Electricity = () => {
   //   index: ind,
   // }));
 
-  return loading ? (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <ActivityIndicator size="large" color="#0000ff" />
+  return processLoader ? (
+    <View style={styles.loaderContainer}>
+      <LottieView
+        source={require("@/src/assets/files/waitingLoader.json")}
+        autoPlay
+        loop
+        style={{ width: 300, height: 300 }}
+      />
     </View>
   ) : (
-    <View style={styles.container}>
-      <View style={styles.mainContainer}>
-        <Text style={[styles.title, { textAlign: "center" }]}>
-          Pay Your Electricity Bill
-        </Text>
-        <View style={styles.midContainer}>
-          <Text style={styles.title}>Electricity Service Provider:</Text>
-          <View style={{ gap: moderateScale(30) }}>
-            <View style={{ zIndex: open ? 1000 : 1 }}>
-              <DropDownPicker
-                open={open}
-                value={providerId}
-                items={electricityProviders}
-                setOpen={setOpen}
-                setValue={setProviderId}
-                setItems={setElectricityProviders}
-                placeholder="Select Provider"
-                style={styles.dropdown}
-                dropDownContainerStyle={styles.dropdownContainer}
-                textStyle={{
-                  fontSize: 18,
-                  color: "#000",
-                }}
-                placeholderStyle={{
-                  fontSize: 18,
-                  color: "#000",
-                }}
-              />
+    <LinearGradient
+      colors={["#00C853", "#1E88E5"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
+    >
+      <View style={styles.container}>
+        <View style={styles.mainContainer}>
+          <Text style={[styles.title, { textAlign: "center" }]}>
+            Pay Your Electricity Bill
+          </Text>
+          {loading ? (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <ActivityIndicator size="large" color="#0000ff" />
             </View>
-            <View>
-              <Text style={styles.title}>Consumer Number:</Text>
-              <TextInput
-                style={[styles.textInputStyle, { color: "#000", fontSize: 20 }]}
-                value={consumerNumber}
-                onChangeText={setConsumerNumber}
-                placeholder="Enter Consumer Number"
-              />
+          ) : (
+            <View style={styles.midContainer}>
+              <Text style={styles.title}>Electricity Service Provider:</Text>
+              <View style={{ gap: moderateScale(30) }}>
+                <View>
+                  <DropDownPicker
+                    open={open}
+                    value={providerId}
+                    items={electricityProviders}
+                    setOpen={setOpen}
+                    setValue={setProviderId}
+                    setItems={setElectricityProviders}
+                    placeholder="Select Provider"
+                    style={styles.dropdown}
+                    dropDownContainerStyle={{
+                      maxHeight: 200,
+                      borderColor: "#ccc",
+                      backgroundColor: "#fff",
+                    }}
+                    textStyle={{ fontSize: 18, color: "#000" }}
+                    placeholderStyle={{ fontSize: 18, color: "#000" }}
+                  />
+                </View>
+
+                <View>
+                  <Text style={styles.title}>Consumer Number:</Text>
+                  <TextInput
+                    style={[
+                      styles.textInputStyle,
+                      { color: "#000", fontSize: 20 },
+                    ]}
+                    value={consumerNumber}
+                    onChangeText={setConsumerNumber}
+                    placeholder="Enter Consumer Number"
+                  />
+                </View>
+                <View>
+                  {fetchLoader ? (
+                    <View
+                      style={{
+                        flex: 1,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <ActivityIndicator size="large" color="#0000ff" />
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.buttonContainer}
+                      onPress={fetchBillDetails}
+                    >
+                      <Text style={{ color: "#fff" }}>Fetch bill</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
             </View>
-            <View>
+          )}
+        </View>
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={showModal}
+          onRequestClose={toggleModal}
+          style={{ backgroundColor: "#fff" }}
+        >
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Electricity Bill detail</Text>
+              {billDetails && (
+                <>
+                  <Text>Consumer Name : {billDetails.consumerName}</Text>
+                  <Text>Consumer Name : {billDetails.dueDate}</Text>
+                  <Text>Bill Amount : {billDetails.billAmount}</Text>
+                </>
+              )}
+
+              <View>
+                <TouchableOpacity
+                  style={styles.proceedButton}
+                  onPress={handlePayBill}
+                >
+                  <Text style={{ color: "#fff" }}>Proceed to Pay</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={toggleModal}
+                >
+                  <Text style={{ color: "#fff" }}>Cancel Payment</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={successModalShow}
+          onRequestClose={toggleModal}
+          // Close the modal on back press
+          style={{ backgroundColor: "#fff" }}
+        >
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Payment Successful</Text>
+              {/* Your modal content goes here */}
+              <Text>Your payment has been processed successfully.</Text>
+
               <TouchableOpacity
-                style={styles.buttonContainer}
-                onPress={fetchBillDetails}
+                style={styles.proceedButton}
+                onPress={() => {
+                  setsuccessModalShow(false); // Close modal
+                  setConsumerNumber(""); // Reset consumer number input
+                  setBillDetails(null); // Reset bill details
+                  setProviderId("");
+                  // Reset provider selection
+                }}
               >
-                <Text style={{ color: "#fff" }}>Fetch bill</Text>
+                <Text style={{ color: "#fff" }}>Ok</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </Modal>
       </View>
-
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showModal}
-        onRequestClose={toggleModal}
-        style={{ backgroundColor: "#fff" }}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Electricity Bill detail</Text>
-            <Text>Consumer Name : Dummy Name</Text>
-            <Text>Consumer Name : 31-01-25</Text>
-            <Text>Bill Amount : 3000 INR</Text>
-
-            <TouchableOpacity
-              style={styles.proceedButton}
-              onPress={handlePayBill}
-            >
-              <Text style={{ color: "#fff" }}>
-                {loading ? "Processing..." : "Proceed to Pay"}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.closeButton} onPress={toggleModal}>
-              <Text style={{ color: "#fff" }}>Cancel Payment</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={successModalShow}
-        onRequestClose={toggleModal}
-        // Close the modal on back press
-        style={{ backgroundColor: "#fff" }}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Payment Successful</Text>
-            {/* Your modal content goes here */}
-            <Text>Your payment has been processed successfully.</Text>
-
-            <TouchableOpacity
-              style={styles.proceedButton}
-              onPress={() => {
-                setsuccessModalShow(false); // Close modal
-                setConsumerNumber(""); // Reset consumer number input
-                setBillDetails(null); // Reset bill details
-                setProviderId("");
-                // Reset provider selection
-              }}
-            >
-              <Text style={{ color: "#fff" }}>Ok</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    </View>
+    </LinearGradient>
   );
 };
 const styles = StyleSheet.create({
@@ -270,7 +334,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     justifyContent: "center",
-    backgroundColor: "#4B83C3",
   },
   mainContainer: {
     padding: 20,
@@ -288,13 +351,7 @@ const styles = StyleSheet.create({
   midContainer: {
     marginTop: 10,
   },
-  dropdown: {
-    marginBottom: 15,
 
-    backgroundColor: "#4B83C3", // Blue for dropdown button
-    borderColor: "#4B83C3",
-    borderRadius: 8,
-  },
   textInputStyle: {
     borderWidth: 1,
     borderColor: "#ccc",
@@ -341,15 +398,17 @@ const styles = StyleSheet.create({
     width: "100%",
     zIndex: 1000, // Higher z-index for the dropdown wrapper
   },
+
   dropdown: {
+    marginBottom: 15,
+    backgroundColor: "#fff", // Blue for dropdown button
+    borderColor: "#fff",
     borderColor: "#ccc",
     borderRadius: 8,
-    backgroundColor: "#4B83C3",
   },
   dropdownContainer: {
     borderColor: "#ccc",
     backgroundColor: "#fff",
-    backgroundColor: "#4B83C3",
   },
   buttonContainer: {
     backgroundColor: "#000",
@@ -357,6 +416,13 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     zIndex: 1, // Ensure the button has a lower z-index
+  },
+  loaderContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 99,
   },
 });
 

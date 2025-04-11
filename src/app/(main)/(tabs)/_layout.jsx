@@ -22,14 +22,6 @@ const TabRoot = () => {
           tabBarLabel: "Home",
         }}
       />
-
-      <Tabs.Screen
-        name="history"
-        options={{
-          headerShown: false, // Ensure History tab hides header
-          tabBarLabel: "History",
-        }}
-      />
     </Tabs>
   );
 };

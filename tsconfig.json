@@ -19,6 +19,10 @@
     "src/app/(main)/UpdateProfile.jsx",
     "src/app/services/ApiServices.jsx",
     "src/app/(main)/(tabs)/_layout.jsx",
-    "src/app/(main)/WaterPay.jsx"
+    "src/app/(main)/WaterPay.jsx",
+    "src/app/(main)/(tabs)/History.jsx",
+    "src/app/(main)/(tabs)/index.jsx",
+    "src/component/molecules/RecentsPay.jsx",
+    "src/app/(main)/BarCodeScanner.jsx"
   ]
 }

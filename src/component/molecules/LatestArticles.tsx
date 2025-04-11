@@ -26,7 +26,13 @@ const latestArticels = [
 const LatestArticles = () => {
   return (
     <View style={styles.mainContainer}>
-      <Text style={{ fontFamily: "SansitaSwashedBold", fontSize: 17 }}>
+      <Text
+        style={{
+          fontWeight: "600",
+          fontSize: 17,
+          fontFamily: "SansitaSwashedBold",
+        }}
+      >
         Latest Articles
       </Text>
       <ScrollView style={{ flexDirection: "row" }} horizontal={true}>

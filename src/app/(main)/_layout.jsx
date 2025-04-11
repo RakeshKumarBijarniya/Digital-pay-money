@@ -15,7 +15,6 @@ const MainStack = () => {
       }}
       drawerContent={(props) => <DrawerContent {...props} />}
     >
-      <Drawer.Screen name="index" />
       <Drawer.Screen name="(tabs)" />
       <Drawer.Screen name="Profile" options={{ headerShown: false }} />
       <Drawer.Screen name="UpdateProfile" options={{ headerShown: false }} />
@@ -26,8 +25,10 @@ const MainStack = () => {
       <Drawer.Screen name="LpgGasPay" options={{ headerShown: false }} />
       <Drawer.Screen name="LicBillPayment" options={{ headerShown: false }} />
       <Drawer.Screen name="MobileRecharge" options={{ headerShown: false }} />
-      <Drawer.Screen name="Scanner" options={{ headerShown: false }} />
+      <Drawer.Screen name="BarCodeScanner" options={{ headerShown: false }} />
       <Drawer.Screen name="WalletToWallet" options={{ headerShown: false }} />
+      <Drawer.Screen name="History" options={{ headerShown: false }} />
+      <Drawer.Screen name="WalletTopUp" options={{ headerShown: false }} />
     </Drawer>
   );
 };

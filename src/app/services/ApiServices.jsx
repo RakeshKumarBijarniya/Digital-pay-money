@@ -7,7 +7,7 @@ const storage = Platform.OS === "web" ? global.localStorage : AsyncStorage;
 
 let getAuthToken = async () => {
   if (Platform.OS === "web") {
-    authToken = await global.localStorage?.getItem("token");
+    authToken = global.localStorage?.getItem("token");
   } else {
     authToken = await storage?.getItem("token");
   }
@@ -15,7 +15,8 @@ let getAuthToken = async () => {
 
 getAuthToken();
 
-export const baseUrl = "https://02bb-110-235-219-21.ngrok-free.app/api/v1";
+export const baseUrl = "https://dpm-project-k7na.onrender.com/api/v1";
+// export const baseUrl = "9f98-110-235-219-120.grok-free.app/api/v1";
 // Create an instance of axios with default configuration
 const baseRouter = axios.create({
   baseURL: baseUrl,

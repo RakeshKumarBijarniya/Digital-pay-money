@@ -23,6 +23,7 @@ import {
 } from "../services/LoginServices";
 import { debounce } from "lodash";
 import { router } from "expo-router";
+
 import { LinearGradient } from "expo-linear-gradient";
 
 const MobileRecharge = () => {
@@ -39,8 +40,8 @@ const MobileRecharge = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [amount, setAmount] = useState("");
   const [showPlan, setShowPlan] = useState([]);
+  const [fetchLoading, setFetchLoading] = useState(false);
 
-  // Debounced function to fetch operator & circle details
   const fetchOperatorAndCircle = useCallback(
     debounce(async (text, prepaidOperators) => {
       try {
@@ -73,7 +74,7 @@ const MobileRecharge = () => {
         circle: circleName,
         op: operatorName,
       });
-      console.log(response.data.info);
+
       setBrowsePlans(response?.data?.info || {});
     } catch (error) {
       console.error("Error fetching browse plans:", error);
@@ -106,15 +107,18 @@ const MobileRecharge = () => {
         amount: parseInt(amount),
         operatorId: parseInt(operatorId),
       };
-
-      console.log(data);
+      setFetchLoading(true);
       const response = await mobileRechargeSubmit(data);
+      setFetchLoading(false);
       if (response.data.status) {
         setSuccessMessage(response.data.message);
         setShowModal(true);
       }
     } catch (e) {
-      console.log(e);
+      console.log(e.response.data.message);
+      setErrorMessage(e.response.data.message);
+      setErrorModal(true);
+      setFetchLoading(false);
     }
   };
   const checkPlan = (category) => {
@@ -173,14 +177,12 @@ const MobileRecharge = () => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
       >
-        <ScrollView keyboardShouldPersistTaps="handled">
+        <ScrollView keyboardShouldPersistTaps="handled" style={{ flex: 1 }}>
           <View style={styles.mainContainer}>
             {loading ? (
-              <ActivityIndicator
-                size="large"
-                color="#0000ff"
-                style={{ justifyContent: "center", alignItems: "center" }}
-              />
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#1E88E5" />
+              </View>
             ) : (
               <>
                 <Text style={[styles.title, { textAlign: "center" }]}>
@@ -217,12 +219,16 @@ const MobileRecharge = () => {
                   onChangeText={setAmount}
                   keyboardType="numeric"
                 />
-                <TouchableOpacity
-                  style={styles.buttonContainer}
-                  onPress={handleSubmit}
-                >
-                  <Text style={{ color: "#fff" }}>Recharge</Text>
-                </TouchableOpacity>
+                {fetchLoading ? (
+                  <ActivityIndicator size="large" color="#1E88E5" />
+                ) : (
+                  <TouchableOpacity
+                    style={styles.buttonContainer}
+                    onPress={handleSubmit}
+                  >
+                    <Text style={{ color: "#fff" }}>Recharge</Text>
+                  </TouchableOpacity>
+                )}
               </>
             )}
             {browsePlans && Object.keys(browsePlans).length > 0 ? (
@@ -344,8 +350,8 @@ const MobileRecharge = () => {
 };
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 20,
+    flex: 1,
   },
   mainContainer: {
     flex: 1,
@@ -355,16 +361,22 @@ const styles = StyleSheet.create({
     elevation: 5,
     gap: 10,
   },
+  loadingContainer: {
+    // flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    height: height * 0.8,
+  },
   title: {
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 15,
   },
   modalBackground: {
-    flex: 1, // Takes full screen
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
 
   modalContainer: {

@@ -17,7 +17,7 @@ const Auth = () => {
     try {
       let checkAuth;
       if (Platform.OS === "web") {
-        checkAuth = storage.getItem("myData"); // localStorage is synchronous
+        checkAuth = await storage.getItem("myData"); // localStorage is synchronous
       } else {
         checkAuth = await storage.getItem("myData");
       }

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   BackHandler,
   Modal,
+  ActivityIndicator,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import {
@@ -17,6 +18,8 @@ import {
 import { router } from "expo-router";
 import { Dimensions } from "react-native";
 import { moderateScale } from "react-native-size-matters";
+import { LinearGradient } from "expo-linear-gradient";
+import LottieView from "lottie-react-native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -26,48 +29,56 @@ const WaterPay = () => {
   const [rrNumber, setRrNumber] = useState("");
   const [billDetails, setBillDetails] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const [fetchLoading, setFetchLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [successModalShow, setSuccessModalShow] = useState(false);
   const [errorModal, setErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [checkLoader, setCheckLoader] = useState(false);
 
   const fetchBillDetails = async () => {
     if (!providerId || !rrNumber.trim()) {
       alert("Please select a provider and enter a valid consumer number");
       return;
     }
+    try {
+      setCheckLoader(true);
+      const data = {
+        operatorId: providerId,
+        canumber: rrNumber,
+        mode: "online",
+        ad1: "pass value according to operator",
+      };
 
-    const data = {
-      operatorId: providerId,
-      canumber: rrNumber,
-      mode: "online",
-      ad1: "pass value according to operator",
-    };
-    console.log(data);
-    const response = await getbillDetails(data);
-    if (response?.data?.status) {
-      setBillDetails({
-        consumerName: response.data.name,
-        dueDate: response.data.duedate,
-        billAmount: response.data.amount,
-      });
-      setShowModal(true);
-    } else {
-      alert("Fetch Failed");
+      const response = await getbillDetails(data);
+      if (response?.data?.status) {
+        setBillDetails({
+          consumerName: response.data.name,
+          dueDate: response.data.duedate,
+          billAmount: response.data.amount,
+        });
+        setShowModal(true);
+        setCheckLoader(false);
+      } else {
+        alert("Fetch Failed");
+        setCheckLoader(false);
+      }
+    } catch (e) {
+      console.log(e.message);
+      setCheckLoader(false);
     }
   };
 
   const handlePayBill = async () => {
-    setLoading(true);
     if (!billDetails) {
       alert("Please fetch the bill details before proceeding to payment.");
       return;
     }
     setShowModal(false);
     try {
+      setLoading(true);
       const data = {
         BillType: "Water",
         operator: providerId,
@@ -88,25 +99,29 @@ const WaterPay = () => {
       };
 
       const response = await handleSubmitBill(data);
-      console.log(response);
-      if (response?.status === "SUCCESS" && response?.data?.status) {
+      console.log("response return", response);
+      console.log("response return ggg", response?.data?.status);
+
+      if (response?.status === "SUCCESS") {
         setSuccessModalShow(true);
         setLoading(false);
-        setSuccessMessage(response.message);
+        setSuccessMessage(response.data.message);
       }
     } catch (e) {
       setErrorMessage(e.response.data.message);
       setErrorModal(true);
-      console.log(e.response.data.message);
+      setLoading(false);
     }
   };
 
   const fetchOperators = async () => {
     try {
+      setFetchLoading(true);
       const response = await waterBillApi();
 
       if (!response) {
         alert("Network Error");
+        setFetchLoading(false);
         return;
       }
       const filteredProviders = response.data.data.filter(
@@ -119,6 +134,7 @@ const WaterPay = () => {
           value: provider.id,
         }))
       );
+      setFetchLoading(false);
     } catch (error) {
       console.error("Error fetching operators:", error);
     }
@@ -132,14 +148,11 @@ const WaterPay = () => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
-        // Clear the subscriberId when back button is pressed
-
         router.back();
-        return true; // Prevent default back action (exit app)
+        return true;
       }
     );
 
-    // Return a cleanup function to remove the event listener when the component is unmounted
     return () => {
       backHandler.remove();
     };
@@ -155,141 +168,175 @@ const WaterPay = () => {
 
   const toggleModal = () => {
     setShowModal(!showModal);
+    setLoading(false);
   };
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.mainContainer}>
-        <Text style={[styles.title, styles.textCenter]}>
-          Pay your Water Bill
-        </Text>
-        <View style={styles.midContainer}>
-          <Text style={styles.title}>Water Service Provider</Text>
-          <View style={{ gap: moderateScale(30) }}>
-            <View style={{ zIndex: open ? 1000 : 1 }}>
-              <DropDownPicker
-                open={open}
-                value={providerId}
-                items={waterProviders}
-                setOpen={setOpen}
-                setValue={setProviderId}
-                setItems={setWaterProviders}
-                placeholder="Select Provider"
-                style={styles.dropdown}
-                dropDownContainerStyle={styles.dropdownContainer}
-                textStyle={{
-                  fontSize: 18,
-                  color: "#000",
-                }}
-                placeholderStyle={{
-                  fontSize: 18,
-                  color: "#000",
-                }}
-              />
+  return loading ? (
+    <View style={styles.loaderContainer}>
+      <LottieView
+        source={require("@/src/assets/files/waitingLoader.json")}
+        autoPlay
+        loop
+        style={{ width: 300, height: 300 }}
+      />
+    </View>
+  ) : (
+    <LinearGradient
+      colors={["#00C853", "#1E88E5"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
+    >
+      <View style={styles.container}>
+        <View style={styles.mainContainer}>
+          <Text style={[styles.title, styles.textCenter]}>
+            Pay your Water Bill
+          </Text>
+          {fetchLoading ? (
+            <View style={{}}>
+              <ActivityIndicator size="large" color="blue" />
             </View>
-            <View>
-              <Text style={styles.title}>RR number</Text>
-              <TextInput
-                style={[styles.textInputStyle, { color: "#000", fontSize: 20 }]}
-                value={rrNumber}
-                onChangeText={(text) => setRrNumber(text)}
-                placeholder="Enter RR Number"
-              />
+          ) : (
+            <View style={styles.midContainer}>
+              <Text style={styles.title}>Water Service Provider</Text>
+              <View style={{ gap: moderateScale(30) }}>
+                <View>
+                  <DropDownPicker
+                    open={open}
+                    value={providerId}
+                    items={waterProviders}
+                    setOpen={setOpen}
+                    setValue={setProviderId}
+                    setItems={setWaterProviders}
+                    placeholder="Select Provider"
+                    style={styles.dropdown}
+                    dropDownContainerStyle={styles.dropdownContainer}
+                    textStyle={{
+                      fontSize: 18,
+                      color: "#000",
+                    }}
+                    placeholderStyle={{
+                      fontSize: 18,
+                      color: "#000",
+                    }}
+                  />
+                </View>
+                <View>
+                  <Text style={styles.title}>RR number</Text>
+                  <TextInput
+                    style={[
+                      styles.textInputStyle,
+                      { color: "#000", fontSize: 20 },
+                    ]}
+                    value={rrNumber}
+                    onChangeText={(text) =>
+                      setRrNumber(text.replace(/[^0-9]/g, ""))
+                    }
+                    placeholder="Enter RR Number"
+                    keyboardType="numeric"
+                  />
+                </View>
+                <View>
+                  {checkLoader ? (
+                    <View>
+                      <ActivityIndicator size="large" color="blue" />
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.buttonContainer}
+                      onPress={fetchBillDetails}
+                    >
+                      <Text style={{ color: "#fff" }}>Fetch bill</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
             </View>
-            <View>
+          )}
+        </View>
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={showModal}
+          onRequestClose={() => setShowModal(false)}
+        >
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              {billDetails ? (
+                <View>
+                  <Text style={styles.modalTitle}>Water Bill Detail</Text>
+                  <Text>Consumer Name : {billDetails.consumerName}</Text>
+                  <Text>Due Date : {billDetails.dueDate}</Text>
+                  <Text>Bill Amount : {billDetails.billAmount}</Text>
+                </View>
+              ) : null}
+
+              <View>
+                <TouchableOpacity
+                  style={styles.proceedButton}
+                  onPress={handlePayBill}
+                >
+                  <Text style={{ color: "#fff" }}>Proceed to Pay</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={handleCancleButton}
+                >
+                  <Text style={{ color: "#fff" }}>Cancel Payment</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={errorModal}
+          onRequestClose={() => setErrorModal(false)}
+        >
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <Text>{errorMessage}</Text>
               <TouchableOpacity
-                style={styles.buttonContainer}
-                onPress={fetchBillDetails}
+                style={styles.closeButton}
+                onPress={handleErrorModal}
               >
-                <Text style={{ color: "#fff" }}>Fetch bill</Text>
+                <Text style={{ color: "#fff" }}>Cancel </Text>
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </Modal>
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={successModalShow}
+          onRequestClose={toggleModal}
+          // Close the modal on back press
+          style={{ backgroundColor: "#fff" }}
+        >
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Payment Successful</Text>
+
+              <Text>{successMessage}</Text>
+
+              <TouchableOpacity
+                style={styles.proceedButton}
+                onPress={() => {
+                  setSuccessModalShow(false);
+                  setRrNumber("");
+                  setBillDetails(null);
+                  setProviderId("");
+                }}
+              >
+                <Text style={{ color: "#fff" }}>Ok</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
-
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showModal}
-        onRequestClose={() => setShowModal(false)}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
-            {billDetails ? (
-              <View>
-                <Text style={styles.modalTitle}>Water Bill Detail</Text>
-                <Text>Consumer Name : {billDetails.consumerName}</Text>
-                <Text>Due Date : {billDetails.dueDate}</Text>
-                <Text>Bill Amount : {billDetails.billAmount}</Text>
-              </View>
-            ) : null}
-
-            <TouchableOpacity
-              style={styles.proceedButton}
-              onPress={handlePayBill}
-            >
-              <Text style={{ color: "#fff" }}>
-                {loading ? "Processing..." : "Proceed to Pay"}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={handleCancleButton}
-            >
-              <Text style={{ color: "#fff" }}>Cancel Payment</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={errorModal}
-        onRequestClose={() => setErrorModal(false)}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
-            <Text>{errorMessage}</Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={handleErrorModal}
-            >
-              <Text style={{ color: "#fff" }}>Cancel </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={successModalShow}
-        onRequestClose={toggleModal}
-        // Close the modal on back press
-        style={{ backgroundColor: "#fff" }}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Payment Successful</Text>
-            {/* Your modal content goes here */}
-            <Text>{successMessage}</Text>
-
-            <TouchableOpacity
-              style={styles.proceedButton}
-              onPress={() => {
-                setSuccessModalShow(false); // Close modal
-                setRrNumber(""); // Reset consumer number input
-                setBillDetails(null); // Reset bill details
-                setProviderId("");
-                // Reset provider selection
-              }}
-            >
-              <Text style={{ color: "#fff" }}>Ok</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    </View>
+    </LinearGradient>
   );
 };
 
@@ -298,7 +345,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     justifyContent: "center",
-    backgroundColor: "#4B83C3",
   },
   mainContainer: {
     padding: 20,
@@ -372,12 +418,10 @@ const styles = StyleSheet.create({
   dropdown: {
     borderColor: "#ccc",
     borderRadius: 8,
-    backgroundColor: "#4B83C3",
   },
   dropdownContainer: {
     borderColor: "#ccc",
     backgroundColor: "#fff",
-    backgroundColor: "#4B83C3",
   },
   buttonContainer: {
     backgroundColor: "#000",
@@ -385,6 +429,13 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     zIndex: 1, // Ensure the button has a lower z-index
+  },
+  loaderContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 99,
   },
 });
 

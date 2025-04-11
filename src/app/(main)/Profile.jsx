@@ -25,12 +25,10 @@ const Profile = () => {
 
   useEffect(() => {
     const backAction = () => {
-      // Navigate to Home when back button is pressed
       router.back();
-      return true; // Prevent default back action
+      return true;
     };
 
-    // Add event listener for hardware back button
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       backAction

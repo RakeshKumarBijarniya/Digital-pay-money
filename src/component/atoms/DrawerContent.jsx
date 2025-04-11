@@ -1,16 +1,17 @@
-import { View, Text, TouchableOpacity, Image } from "react-native";
+import { View, Text, TouchableOpacity, Image, Platform } from "react-native";
 import React, { useState } from "react";
 import { DrawerContentScrollView } from "@react-navigation/drawer";
 import { moderateScale } from "react-native-size-matters";
 import { Redirect, router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
 const DrawerContent = ({ ...props }) => {
   const [showWalletService, setShowWalletService] = useState(false);
   const [showMobileItem, setShowMobileItem] = useState(false);
   const [showPayBillItem, setShowBillItem] = useState(false);
-
+  const storage = Platform.OS === "web" ? global.localStorage : AsyncStorage;
   const handleLogout = async () => {
-    await AsyncStorage.removeItem("myData");
+    await storage.removeItem("myData");
     router.push("/(auth)");
   };
   return (
@@ -29,6 +30,7 @@ const DrawerContent = ({ ...props }) => {
         </TouchableOpacity>
         <TouchableOpacity
           style={{ flexDirection: "row", gap: moderateScale(20) }}
+          onPress={() => router.push("/(main)/History")}
         >
           <Image
             source={require("@/src/assets/images/drawer_history.png")}
@@ -66,7 +68,7 @@ const DrawerContent = ({ ...props }) => {
           <View style={{ gap: 20 }}>
             <TouchableOpacity
               style={{ left: 20, flexDirection: "row", gap: moderateScale(20) }}
-              onPress={() => router.push("/Profile")}
+              onPress={() => router.push("/(main)/WalletTopUp")}
             >
               <Image
                 source={require("@/src/assets/images/drawer_plus_icon.png")}
