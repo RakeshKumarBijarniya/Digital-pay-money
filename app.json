@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "secondApp",
-    "slug": "secondApp",
+    "name": "digital-pay-money",
+    "slug": "digital-pay-money",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
